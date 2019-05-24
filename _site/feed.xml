@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-05-24T17:19:47-04:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">NiFi Two-Way TLS/SSL with Powershell and Windows</title><link href="http://localhost:4000/nifi/security/2019/05/24/NiFi-Two-Way-TLS-with-Powershell-and-Windows.html" rel="alternate" type="text/html" title="NiFi Two-Way TLS/SSL with Powershell and Windows" /><published>2019-05-24T15:57:29-04:00</published><updated>2019-05-24T15:57:29-04:00</updated><id>http://localhost:4000/nifi/security/2019/05/24/NiFi-Two-Way-TLS-with-Powershell-and-Windows</id><content type="html" xml:base="http://localhost:4000/nifi/security/2019/05/24/NiFi-Two-Way-TLS-with-Powershell-and-Windows.html">&lt;p&gt;Recently I worked on a project were a Windows platform needed to communicate to a Restful API hosted on NiFi. Part of the security requirements involved implementation of two-way or mutual TLS and the application running on windows was restricted to using Powershell. This blog article assumes you have basic knowledge with configurations for JAVA keystores, truststores and creation of certificates, they will not be covered in detail. I will cover how Powersehll was able to connect and send secured requests to our target application. It is assumed the client’s certifi&lt;/p&gt;
+
+&lt;p&gt;In this example I was provided a keystore from the client server, from this I will export the required formats we will use for our configurations.&lt;/p&gt;
+
+&lt;h3 id=&quot;convert-jks-into-p12-and-crt&quot;&gt;Convert .JKS into .p12 and .crt:&lt;/h3&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;keytool &lt;span class=&quot;nt&quot;&gt;-importkeystore&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-srckeystore&lt;/span&gt; mykeystore.jks &lt;span class=&quot;nt&quot;&gt;-destkeystore&lt;/span&gt; client.p12 &lt;span class=&quot;nt&quot;&gt;-srcalias&lt;/span&gt; youralias -
+srcstoretype jks &lt;span class=&quot;nt&quot;&gt;-deststoretype&lt;/span&gt; pkcs12
+openssl pkcs12 &lt;span class=&quot;nt&quot;&gt;-in&lt;/span&gt; client.p12 &lt;span class=&quot;nt&quot;&gt;-out&lt;/span&gt; client.pem
+openssl x509 &lt;span class=&quot;nt&quot;&gt;-outform&lt;/span&gt; der &lt;span class=&quot;nt&quot;&gt;-in&lt;/span&gt; client.pem &lt;span class=&quot;nt&quot;&gt;-out&lt;/span&gt; client.crt&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h3 id=&quot;import-the-p12-file-into-windows-certificate-store&quot;&gt;Import the .p12 file into windows certificate store.&lt;/h3&gt;
+&lt;p&gt;On your windows machine click search and type in cert
+Click on Manage user certificates&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/5fhbtrY.png&quot; alt=&quot;Certificate Manager&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;This opens up the certificate manager, click on &lt;strong&gt;Personal –&amp;gt; Certificates&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/A4OGXx9.png&quot; alt=&quot;Personal Certificate&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;With Certificates highlighted click on &lt;strong&gt;Action –&amp;gt; All Tasks –&amp;gt; Import..&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/JBi9bJr.png&quot; alt=&quot;All Tasks&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The next screen will have Current User defaulted, it cannot be changed as we are editing for current user. Just click &lt;strong&gt;Next&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/iquzNhZ.png&quot; alt=&quot;Certificate Import&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;On the next screen click browse, you will select your .p12 file that was created in the earlier steps. In order to do so you must also change the filter so that it shows files with the .p12 extension.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/LExId7X.png&quot; alt=&quot;Browse File&quot; /&gt;
+&lt;img src=&quot;https://i.imgur.com/VMEqOOv.png&quot; alt=&quot;iFile Format&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;With the proper &lt;strong&gt;.p12&lt;/strong&gt; file selected, click next.&lt;/p&gt;
+
+&lt;p&gt;![File Selected]https://i.imgur.com/m7VFJ8p.png)&lt;/p&gt;
+
+&lt;p&gt;On the following screen enter the password and click next.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/I2l3Y6t.png&quot; alt=&quot;Password&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;On the following screen accept the defaults by clicking next.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/3rpAouG.png&quot; alt=&quot;Accept Defaults&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Click finish on the last screen&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/vJkS9jd.png&quot; alt=&quot;Finish&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Your .p12 certificate is installed.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/tj0rZyA.png&quot; alt=&quot;p12 Installed&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;nifi-configuration&quot;&gt;NiFi Configuration:&lt;/h2&gt;
+&lt;p&gt;The NiFi configuration of the processor assumes you have a properly set up truststore with the certificate the client will be sending installed. We are using a StandardRestrictedSSLContextService defined as follows.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/WFinG4G.png&quot; alt=&quot;StandardRestrictedSSLContextService&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We also use a StandardHTTPContextMap in NiFi with the following default configurations. 
+&lt;img src=&quot;https://i.imgur.com/4BzkVwd.png&quot; alt=&quot;StandardHTTPContextMap&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Finally we have the HandleHTTPRequest processor with a port that is not being used, in our case 9092 for this test. We configured our Rest Endpoint and finally we have selected Need Authentication which will required two-way SSL.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/ZikLem0.png&quot; alt=&quot;StandardHTTPContextMap&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;execution-of-powershell&quot;&gt;Execution of powershell:&lt;/h2&gt;
+&lt;p&gt;We have two different ways that we can execute the powershell command. The first method is to use the .crt file which would need to be deployed on the Windows machine. The first method is as follows.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt;.Import&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;D:&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\p&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ath&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ls&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\c&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;lient.crt&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Net.ServicePointManager]::SecurityProtocol &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Net.SecurityProtocolType]::Tls12
+Invoke-WebRequest &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-UseBasicParsing&lt;/span&gt; https://yourhost:9092/endpoint/hbase &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-ContentType&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;application/json&quot;&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-Method&lt;/span&gt; POST &lt;span class=&quot;nt&quot;&gt;-Body&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;{'name':'Thomas','email':'none@gmail.com'}&quot;&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-Certificate&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;The second method is to use the thumbprint, first we will demo how to get the thumbprint in powershell.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt;.Import&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;D:&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\p&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ath&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ls&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\c&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;lient.crt&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+Write-Output &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$cert&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/MIlrzYt.png&quot; alt=&quot;Thumbprint Display&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Using the thumbprint in your powershell command.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Net.ServicePointManager]::SecurityProtocol &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Net.SecurityProtocolType]::Tls12
+Invoke-WebRequest &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-UseBasicParsing&lt;/span&gt; https://yourhost:9092/endpoint/hbase &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-ContentType&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;application/json&quot;&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-Method&lt;/span&gt; POST &lt;span class=&quot;nt&quot;&gt;-Body&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;{'name':'Thomas','email':'none@gmail.com'}&quot;&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-CertificateThumbprint&lt;/span&gt; 19XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;You can also get the thumbpring and pass it right from the cert.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt;.Import&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;D:&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\p&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ath&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ls&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\c&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;lient.crt&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Net.ServicePointManager]::SecurityProtocol &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Net.SecurityProtocolType]::Tls12
+Invoke-WebRequest &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-UseBasicParsing&lt;/span&gt; https://yourhost:9092/endpoint/hbase &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-ContentType&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;application/json&quot;&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-Method&lt;/span&gt; POST &lt;span class=&quot;nt&quot;&gt;-Body&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;{'name':'Thomas','email':'none@gmail.com'}&quot;&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-CertificateThumbprint&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt;.thumbprint&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;All of the above methods will give you success.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/KzIzoBz.png&quot; alt=&quot;200 OK&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;You can also see the file has gone through NiFi.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/d3hNa6L.png&quot; alt=&quot;Nifi Success&quot; /&gt;&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Recently I worked on a project were a Windows platform needed to communicate to a Restful API hosted on NiFi. Part of the security requirements involved implementation of two-way or mutual TLS and the application running on windows was restricted to using Powershell. This blog article assumes you have basic knowledge with configurations for JAVA keystores, truststores and creation of certificates, they will not be covered in detail. I will cover how Powersehll was able to connect and send secured requests to our target application. It is assumed the client’s certifi</summary></entry><entry><title type="html">Welcome to Jekyll!</title><link href="http://localhost:4000/jekyll/update/2019/05/24/welcome-to-jekyll.html" rel="alternate" type="text/html" title="Welcome to Jekyll!" /><published>2019-05-24T15:57:29-04:00</published><updated>2019-05-24T15:57:29-04:00</updated><id>http://localhost:4000/jekyll/update/2019/05/24/welcome-to-jekyll</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2019/05/24/welcome-to-jekyll.html">&lt;p&gt;You’ll find this post in your &lt;code class=&quot;highlighter-rouge&quot;&gt;_posts&lt;/code&gt; directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run &lt;code class=&quot;highlighter-rouge&quot;&gt;jekyll serve&lt;/code&gt;, which launches a web server and auto-regenerates your site when a file is updated.&lt;/p&gt;
+
+&lt;p&gt;To add new posts, simply add a file in the &lt;code class=&quot;highlighter-rouge&quot;&gt;_posts&lt;/code&gt; directory that follows the convention &lt;code class=&quot;highlighter-rouge&quot;&gt;YYYY-MM-DD-name-of-post.ext&lt;/code&gt; and includes the necessary front matter. Take a look at the source for this post to get an idea about how it works.&lt;/p&gt;
+
+&lt;p&gt;Jekyll also offers powerful support for code snippets:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;nb&quot;&gt;puts&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Hi, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Tom'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; prints 'Hi, Tom' to STDOUT.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Check out the &lt;a href=&quot;https://jekyllrb.com/docs/home&quot;&gt;Jekyll docs&lt;/a&gt; for more info on how to get the most out of Jekyll. File all bugs/feature requests at &lt;a href=&quot;https://github.com/jekyll/jekyll&quot;&gt;Jekyll’s GitHub repo&lt;/a&gt;. If you have questions, you can ask them on &lt;a href=&quot;https://talk.jekyllrb.com/&quot;&gt;Jekyll Talk&lt;/a&gt;.&lt;/p&gt;</content><author><name></name></author><summary type="html">You’ll find this post in your _posts directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run jekyll serve, which launches a web server and auto-regenerates your site when a file is updated.</summary></entry></feed>
