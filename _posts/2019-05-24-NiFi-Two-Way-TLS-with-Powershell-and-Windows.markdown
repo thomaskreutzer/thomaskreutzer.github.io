@@ -5,7 +5,7 @@ date:   2019-05-24 15:57:29 -0400
 categories: nifi security
 author: Thomas Kreutzer
 ---
-Recently I worked on a project were a Windows platform needed to communicate to a Restful API hosted on NiFi. Part of the security requirements involved implementation of two-way or mutual TLS and the application running on windows was restricted to using Powershell. This blog article assumes you have basic knowledge with configurations for JAVA keystores, truststores and creation of certificates, they will not be covered in detail. I will cover how Powersehll was able to connect and send secured requests to our target application. It is assumed the client's certifi
+Recently I worked on a project were a Windows platform needed to communicate to a Restful API hosted on NiFi. Part of the security requirements involved implementation of two-way or mutual TLS and the application running on windows was restricted to using Powershell. This blog article assumes you have basic knowledge with configurations for JAVA keystores, truststores and creation of certificates, they will not be covered in detail. I will cover how Powersehll was able to connect and send secured requests to our target application. It is assumed the client's certificates have already been created.
 
 In this example I was provided a keystore from the client server, from this I will export the required formats we will use for our configurations. 
 
