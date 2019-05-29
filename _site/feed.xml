@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-05-29T08:49:45-04:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">Create Service Account Keytabs from Active Directory</title><link href="http://localhost:4000/hadoop/security/2019/05/29/Create-Service-Account-Keytabs-AD.html" rel="alternate" type="text/html" title="Create Service Account Keytabs from Active Directory" /><published>2019-05-29T08:27:29-04:00</published><updated>2019-05-29T08:27:29-04:00</updated><id>http://localhost:4000/hadoop/security/2019/05/29/Create-Service-Account-Keytabs-AD</id><content type="html" xml:base="http://localhost:4000/hadoop/security/2019/05/29/Create-Service-Account-Keytabs-AD.html">&lt;h3 id=&quot;assumptions&quot;&gt;Assumptions:&lt;/h3&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-05-29T10:47:52-04:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">Create Service Account Keytabs from Active Directory</title><link href="http://localhost:4000/hadoop/security/2019/05/29/Create-Service-Account-Keytabs-AD.html" rel="alternate" type="text/html" title="Create Service Account Keytabs from Active Directory" /><published>2019-05-29T08:27:29-04:00</published><updated>2019-05-29T08:27:29-04:00</updated><id>http://localhost:4000/hadoop/security/2019/05/29/Create-Service-Account-Keytabs-AD</id><content type="html" xml:base="http://localhost:4000/hadoop/security/2019/05/29/Create-Service-Account-Keytabs-AD.html">&lt;h3 id=&quot;assumptions&quot;&gt;Assumptions:&lt;/h3&gt;
 
 &lt;p&gt;It is assumed that you have already configured your cluster with a one-way trust to Active Directory and have an MIT kerberos installation in your cluster. It is also assumed that you have installed all kerberos client tools on your linux hosts.&lt;/p&gt;
 
@@ -9,7 +9,116 @@ addent &lt;span class=&quot;nt&quot;&gt;-password&lt;/span&gt; service-account@R
 wkt service-account.keytab
 quit&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;That’s it, you know should have a keytab created in the directory you are in with the name service-account.keytab. Of course you should substitute this name and account with the proper name for you configuration.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Assumptions:</summary></entry><entry><title type="html">NiFi Two-Way TLS/SSL with Powershell and Windows</title><link href="http://localhost:4000/nifi/security/2019/05/24/NiFi-Two-Way-TLS-with-Powershell-and-Windows.html" rel="alternate" type="text/html" title="NiFi Two-Way TLS/SSL with Powershell and Windows" /><published>2019-05-24T15:57:29-04:00</published><updated>2019-05-24T15:57:29-04:00</updated><id>http://localhost:4000/nifi/security/2019/05/24/NiFi-Two-Way-TLS-with-Powershell-and-Windows</id><content type="html" xml:base="http://localhost:4000/nifi/security/2019/05/24/NiFi-Two-Way-TLS-with-Powershell-and-Windows.html">&lt;p&gt;Recently I worked on a project were a Windows platform needed to communicate to a Restful API hosted on NiFi. Part of the security requirements involved implementation of two-way or mutual TLS and the application running on windows was restricted to using Powershell. This blog article assumes you have basic knowledge with configurations for JAVA keystores, truststores and creation of certificates, they will not be covered in detail. I will cover how Powersehll was able to connect and send secured requests to our target application. It is assumed the client’s certificates have already been created.&lt;/p&gt;
+&lt;p&gt;That’s it, you know should have a keytab created in the directory you are in with the name service-account.keytab. Of course you should substitute this name and account with the proper name for you configuration.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Assumptions:</summary></entry><entry><title type="html">NiFi Keytab Credential Service and Ranger</title><link href="http://localhost:4000/nifi/security/2019/05/29/NiFi-Keytab-Credential-Service-and-Ranger.html" rel="alternate" type="text/html" title="NiFi Keytab Credential Service and Ranger" /><published>2019-05-29T08:27:29-04:00</published><updated>2019-05-29T08:27:29-04:00</updated><id>http://localhost:4000/nifi/security/2019/05/29/NiFi-Keytab-Credential-Service-and-Ranger</id><content type="html" xml:base="http://localhost:4000/nifi/security/2019/05/29/NiFi-Keytab-Credential-Service-and-Ranger.html">&lt;h3 id=&quot;about-the-keytab-credential-service&quot;&gt;About the keytab credential service:&lt;/h3&gt;
+
+&lt;p&gt;Provides a mechanism for specifying a Keytab and a Principal that other components are able to use in order to perform authentication using Kerberos. By encapsulating this information into a Controller Service and allowing other components to make use of it (as opposed to specifying the principal and keytab directly in the processor) an administrative is able to choose which users are allowed to use which keytabs and principals. This provides a more robust security model for multi-tenant use cases.&lt;/p&gt;
+
+&lt;h3 id=&quot;configure-the-service&quot;&gt;Configure the service&lt;/h3&gt;
+
+&lt;p&gt;Log into the NiFi UI and click on the &lt;strong&gt;Configuration&lt;/strong&gt; icon.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/Ai3ifTb.png&quot; alt=&quot;Configuration&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;This will open up a new panel for &lt;strong&gt;NiFi Flow Configuration&lt;/strong&gt; and click on &lt;strong&gt;CONTROLLER SERVICES&lt;/strong&gt;, this will display all the controller services defined at this level. &lt;strong&gt;NOTE:&lt;/strong&gt; this is currently being done at the root canvas &lt;strong&gt;Nifi Flow&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/F57hgLa.png&quot; alt=&quot;Controller Service&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;On the far right hand side there will be a + sign, click this to create a new controller service.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/6BpfFNs.png&quot; alt=&quot;New Controller Service&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In the filter type the word keytab, then hit enter or click &lt;strong&gt;ADD&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/9oQCJuD.png&quot; alt=&quot;Filter&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;This has added the service, notice the caution icon as we have not yet configured this properly.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/Anx1xwk.png&quot; alt=&quot;Keytab Credential Service&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;On the far right hand side click on the &lt;strong&gt;Configure&lt;/strong&gt; icon.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/DRH0YCL.png&quot; alt=&quot;Properties&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Notice the name of the service, this is very generic and should be changed to be more specific. Otherwise it starts to become very difficult in NiFi to understand which controller services are for specific purposes.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/vn296cF.png&quot; alt=&quot;Keytab Credential Service&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Note the unique ID that has been created by NiFi, we will use this later.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/UFAzITW.png&quot; alt=&quot;ID&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Since we are configuring the generic hdpprd-ingest this will be named more appropriately.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/YnhgaBy.png&quot; alt=&quot;Controller Service&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Next click on &lt;strong&gt;PROPERTIES&lt;/strong&gt; to finish the configuration. 
+Enter in the path to the keytab file path and the Kerberos Principal. &lt;strong&gt;NOTE:&lt;/strong&gt; the keytab should be accessible to the user running NiFi, in this case you should &lt;strong&gt;chown nifi:hadoop /path/to/keytab&lt;/strong&gt; and the permissions should be &lt;strong&gt;chmod 600 /path/to/keytab&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/lwD4iB6.png&quot; alt=&quot;Credentials&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Click on OK to exit, the controller services is now configured.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/mHTFa4D.png&quot; alt=&quot;Created Service&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;security-configuration&quot;&gt;Security Configuration:&lt;/h3&gt;
+
+&lt;p&gt;Next we will configure a set of policies in Ranger to allow a test of the controller service. This next section assumes that the users already have access to the process group and will not cover these security details. 
+In the flow the processor &lt;strong&gt;FetchHBaseRow&lt;/strong&gt; requires a keytab, right click on it and click on configure.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/Rfcb6t9.png&quot; alt=&quot;FetchHbaseRow&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;For the &lt;strong&gt;HBase Client Service&lt;/strong&gt; we currently have no value set.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/cyKfTm1.png&quot; alt=&quot;HbaseClientService&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;When clicking on the dropdown of available services, we can see that no service access has been granted.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/5Ml07E5.png&quot; alt=&quot;No Service Available&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The &lt;strong&gt;HBase Client Service&lt;/strong&gt; will use the keytab, in this case we will create a new service. &lt;strong&gt;NOTE:&lt;/strong&gt; This will create a service in the scope of the process group level.
+I am renaming my service&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;FROM:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/2QXymjr.png&quot; alt=&quot;From&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;TO:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/U7xcxDY.png&quot; alt=&quot;To&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Next click on the arrow to configure, when asked to save changes click yes.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/RpA8kP5.png&quot; alt=&quot;Configure&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;This takes you to the services window, click on the configure icon to edit your controller service and notice the Kerberos Credentials Service is not configured.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/ZsuTIi7.png&quot; alt=&quot;No Value Set&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Clicking on the drop down displays the fact that a service is configured but not available to my user. NOTE: the id number matches the one previously mentioned in this article.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/gyP2hCf.png&quot; alt=&quot;Not Available&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In Ranger we will add the following entry to the policy we are configuring for this group. 
+&lt;strong&gt;Format Mask&lt;/strong&gt; = /controller-services/{controller unique identifier}
+&lt;strong&gt;Value&lt;/strong&gt; = /controller-services/612a6a17-0168-XXXX-XXXX-XXXXXXX506a0&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/v4Itj1D.png&quot; alt=&quot;Ranger&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Once the policies have refreshed we now have access to the service. Pleas select the service.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/ggnEW8A.png&quot; alt=&quot;Configured&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Configure the rest of the parameters required, in this case for HBase it is the location to the core-site.xml, hdfs-site.xml and hbase-site.xml.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/L6sUwDT.png&quot; alt=&quot;Final Configurations&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Enable the service and test the processor, and we have success.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/1eFE38T.png&quot; alt=&quot;Success&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;other-considerations&quot;&gt;Other Considerations&lt;/h3&gt;
+
+&lt;p&gt;If you provide access to a user for the keytab credential service with read/write, they do have full access to the service. This means they can view and change the configuration. If you intend to use this globally as a one-time setup and provide this to process group users it would require you to add this to a policy with read only. There is always still an option for an administrator to set these up at the process group level, however this could also become difficult to manage. Many times groups can just configure these settings within their own process group putting control in the hands of the developers.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">About the keytab credential service:</summary></entry><entry><title type="html">NiFi Two-Way TLS/SSL with Powershell and Windows</title><link href="http://localhost:4000/nifi/security/2019/05/24/NiFi-Two-Way-TLS-with-Powershell-and-Windows.html" rel="alternate" type="text/html" title="NiFi Two-Way TLS/SSL with Powershell and Windows" /><published>2019-05-24T15:57:29-04:00</published><updated>2019-05-24T15:57:29-04:00</updated><id>http://localhost:4000/nifi/security/2019/05/24/NiFi-Two-Way-TLS-with-Powershell-and-Windows</id><content type="html" xml:base="http://localhost:4000/nifi/security/2019/05/24/NiFi-Two-Way-TLS-with-Powershell-and-Windows.html">&lt;p&gt;Recently I worked on a project were a Windows platform needed to communicate to a Restful API hosted on NiFi. Part of the security requirements involved implementation of two-way or mutual TLS and the application running on windows was restricted to using Powershell. This blog article assumes you have basic knowledge with configurations for JAVA keystores, truststores and creation of certificates, they will not be covered in detail. I will cover how Powersehll was able to connect and send secured requests to our target application. It is assumed the client’s certificates have already been created.&lt;/p&gt;
 
 &lt;p&gt;In this example I was provided a keystore from the client server, from this I will export the required formats we will use for our configurations.&lt;/p&gt;
 
