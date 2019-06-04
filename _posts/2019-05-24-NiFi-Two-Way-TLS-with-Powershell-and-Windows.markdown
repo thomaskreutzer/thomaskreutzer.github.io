@@ -118,7 +118,7 @@ Invoke-WebRequest `
 {% endhighlight %}
 
 
-You can also get the thumbpring and pass it right from the cert. 
+You can also get the thumbprint and pass it right from the cert. 
 
 {% highlight shell %}
 $Cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
@@ -140,5 +140,4 @@ All of the above methods will give you success.
 You can also see the file has gone through NiFi.
 
 ![Nifi Success](https://i.imgur.com/d3hNa6L.png)
-
 

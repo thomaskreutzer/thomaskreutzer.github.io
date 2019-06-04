@@ -142,7 +142,7 @@ Invoke-WebRequest <span class="sb">`</span>
   <span class="nt">-Method</span> POST <span class="nt">-Body</span> <span class="s2">"{'name':'Thomas','email':'none@gmail.com'}"</span> <span class="sb">`</span>
   <span class="nt">-CertificateThumbprint</span> 19XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</code></pre></figure>
 
-<p>You can also get the thumbpring and pass it right from the cert.</p>
+<p>You can also get the thumbprint and pass it right from the cert.</p>
 
 <figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nv">$Cert</span> <span class="o">=</span> New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
 <span class="nv">$Cert</span>.Import<span class="o">(</span><span class="s2">"D:</span><span class="se">\p</span><span class="s2">ath</span><span class="se">\t</span><span class="s2">o</span><span class="se">\t</span><span class="s2">ls</span><span class="se">\c</span><span class="s2">lient.crt"</span><span class="o">)</span>
