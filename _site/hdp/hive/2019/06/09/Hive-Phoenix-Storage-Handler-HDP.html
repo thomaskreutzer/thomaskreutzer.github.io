@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Hive Phoenix Storage Handler on HDP | Thomas Kreutzer’s Git Pages Blog</title>
+<meta name="generator" content="Jekyll v3.8.5" />
+<meta property="og:title" content="Hive Phoenix Storage Handler on HDP" />
+<meta name="author" content="Thomas Kreutzer" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Use Case:" />
+<meta property="og:description" content="Use Case:" />
+<link rel="canonical" href="http://localhost:4000/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP.html" />
+<meta property="og:url" content="http://localhost:4000/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP.html" />
+<meta property="og:site_name" content="Thomas Kreutzer’s Git Pages Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-06-09T05:27:29-04:00" />
+<script type="application/ld+json">
+{"url":"http://localhost:4000/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP.html","headline":"Hive Phoenix Storage Handler on HDP","dateModified":"2019-06-09T05:27:29-04:00","datePublished":"2019-06-09T05:27:29-04:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP.html"},"author":{"@type":"Person","name":"Thomas Kreutzer"},"description":"Use Case:","@type":"BlogPosting","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Thomas Kreutzer's Git Pages Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Thomas Kreutzer&#39;s Git Pages Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Hive Phoenix Storage Handler on HDP</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2019-06-09T05:27:29-04:00" itemprop="datePublished">Jun 9, 2019
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Thomas Kreutzer</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h3 id="use-case">Use Case:</h3>
+
+<p>Recently when working on an application with a client we had a need to have fast interactions with small amounts of data but it needed to be available immediately to Hive. The synchronization was critical for another batch process that was decoupled from the interactions of the application. Yes, we could have probably handled this many ways but in the end I wanted to see if we could have the required inserts handled via the web application running on these windows servers. In a prior blog entry I talk about TLS with PowerShell which led into some of these tests.</p>
+
+<h3 id="hdp-configuration">HDP Configuration</h3>
+
+<p>In the Ambari UI we go to the <strong>Hive config</strong> tab for the following and entered <strong>/usr/hdp/current/phoenix-client/phoenix-hive.jar</strong> in the <strong>hive_env.sh</strong> in two places. <strong>NOTE:</strong> these are comma separated values and the first value <strong>hive-hcatalog</strong> existed prior..</p>
+
+<p><img src="https://i.imgur.com/SLkCzDA.png" alt="hive_env.sh" /></p>
+
+<p>This will open up a new panel for <strong>NiFi Flow Configuration</strong> and click on <strong>CONTROLLER SERVICES</strong>, this will display all the controller services defined at this level. <strong>NOTE:</strong> this is currently being done at the root canvas <strong>Nifi Flow</strong>.</p>
+
+<p>I also added the custom hive site property for both Hive 1.x and LLAP:</p>
+
+<p><strong>hive.aux.jars.path=file://usr/hdp/current/phoenix-client/phoenix-hive.jar</strong></p>
+
+<p><img src="https://i.imgur.com/q1feDJa.png" alt="Hive 1.2" /></p>
+
+<p><img src="https://i.imgur.com/DMJOplz.png" alt="Hive 2.x" /></p>
+
+<p>After completing I restarted all hive services required and attempted the following query which failed.</p>
+
+<figure class="highlight"><pre><code class="language-sql" data-lang="sql"><span class="k">create</span> <span class="k">table</span> <span class="err">{</span><span class="n">yourhivedb</span><span class="err">}</span><span class="p">.</span><span class="n">phoenix_table</span> <span class="p">(</span>
+  <span class="n">s1</span> <span class="n">string</span><span class="p">,</span>
+  <span class="n">i1</span> <span class="n">int</span><span class="p">,</span>
+  <span class="n">f1</span> <span class="n">float</span><span class="p">,</span>
+  <span class="n">d1</span> <span class="n">double</span>
+<span class="p">)</span>
+<span class="n">STORED</span> <span class="k">BY</span> <span class="s1">'org.apache.phoenix.hive.PhoenixStorageHandler'</span>
+<span class="n">TBLPROPERTIES</span> <span class="p">(</span>
+  <span class="nv">"phoenix.table.name"</span> <span class="o">=</span> <span class="nv">"{yourphoenixdb}.phoenix_table"</span><span class="p">,</span>
+  <span class="nv">"phoenix.zookeeper.quorum"</span> <span class="o">=</span> <span class="nv">"{removed}.com,{removed}.com,{removed}.com"</span><span class="p">,</span>
+  <span class="nv">"phoenix.zookeeper.znode.parent"</span> <span class="o">=</span> <span class="nv">"/hbase"</span><span class="p">,</span>
+  <span class="nv">"phoenix.zookeeper.client.port"</span> <span class="o">=</span> <span class="nv">"2181"</span><span class="p">,</span>
+  <span class="nv">"phoenix.rowkeys"</span> <span class="o">=</span> <span class="nv">"s1, i1"</span><span class="p">,</span>
+  <span class="nv">"phoenix.column.mapping"</span> <span class="o">=</span> <span class="nv">"s1:s1, i1:i1, f1:f1, d1:d1"</span><span class="p">,</span>
+  <span class="nv">"phoenix.table.options"</span> <span class="o">=</span> <span class="nv">"SALT_BUCKETS=10, DATA_BLOCK_ENCODING='DIFF'"</span>
+<span class="p">);</span></code></pre></figure>
+
+<p>The error as follows:</p>
+
+<figure class="highlight"><pre><code class="language-none" data-lang="none">Error: Error while processing statement: 
+FAILED: Execution Error, return code 1 from org.apache.hadoop.hive.ql.exec.DDLTask. MetaException(message:org.apache.hadoop.hbase.client.RetriesExhaustedException: Can't get the location for replica 0)
+(state=08S01,code=1)</code></pre></figure>
+
+<p>Upon researching, this is a znode issue. This should have been obvious as Kerberos is enabled. It is set as <strong>/habse</strong> and should be <strong>/hbase-secure</strong> 
+Modified Query:</p>
+
+<figure class="highlight"><pre><code class="language-sql" data-lang="sql"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="err">{</span><span class="n">yourhivedb</span><span class="err">}</span><span class="p">.</span><span class="n">phoenix_table</span> <span class="p">(</span>
+  <span class="n">s1</span> <span class="n">string</span><span class="p">,</span>
+  <span class="n">i1</span> <span class="n">int</span><span class="p">,</span>
+  <span class="n">f1</span> <span class="n">float</span><span class="p">,</span>
+  <span class="n">d1</span> <span class="n">double</span>
+<span class="p">)</span>
+<span class="n">STORED</span> <span class="k">BY</span> <span class="s1">'org.apache.phoenix.hive.PhoenixStorageHandler'</span>
+<span class="n">TBLPROPERTIES</span> <span class="p">(</span>
+  <span class="nv">"phoenix.table.name"</span> <span class="o">=</span> <span class="nv">"{yourphoenixdb}.phoenix_table"</span><span class="p">,</span>
+  <span class="nv">"phoenix.zookeeper.quorum"</span> <span class="o">=</span> <span class="nv">"{removed}.com,{removed}.com,{removed}.com"</span><span class="p">,</span>
+  <span class="nv">"phoenix.zookeeper.znode.parent"</span> <span class="o">=</span> <span class="nv">"/hbase-secure"</span><span class="p">,</span>
+  <span class="nv">"phoenix.zookeeper.client.port"</span> <span class="o">=</span> <span class="nv">"2181"</span><span class="p">,</span>
+  <span class="nv">"phoenix.rowkeys"</span> <span class="o">=</span> <span class="nv">"s1, i1"</span><span class="p">,</span>
+  <span class="nv">"phoenix.column.mapping"</span> <span class="o">=</span> <span class="nv">"s1:s1, i1:i1, f1:f1, d1:d1"</span><span class="p">,</span>
+  <span class="nv">"phoenix.table.options"</span> <span class="o">=</span> <span class="nv">"SALT_BUCKETS=10, DATA_BLOCK_ENCODING='DIFF'"</span>
+<span class="p">);</span></code></pre></figure>
+
+<p>Now I am getting a new error:</p>
+
+<figure class="highlight"><pre><code class="language-none" data-lang="none">Error: Error while processing statement: FAILED: Execution Error, return code 1 from org.apache.hadoop.hive.ql.exec.DDLTask. MetaException(message:org.apache.phoenix.exception.PhoenixIOException: org.apache.hadoop.hbase.security.AccessDeniedException: Insufficient permissions for user âhive/ln112133.eh.pweh.com@HDP-DEV.PW.UTC.COM',action: scannerOpen, tableName:SYSTEM:CATALOG, family:0, column: TYPE_NAME
+        at org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor.authorizeAccess(RangerAuthorizationCoprocessor.java:551)
+        at org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor.preScannerOpen(RangerAuthorizationCoprocessor.java:955)
+        at org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor.preScannerOpen(RangerAuthorizationCoprocessor.java:855)
+        at org.apache.hadoop.hbase.regionserver.RegionCoprocessorHost$50.call(RegionCoprocessorHost.java:1267)
+        at org.apache.hadoop.hbase.regionserver.RegionCoprocessorHost$RegionOperation.call(RegionCoprocessorHost.java:1660)
+        at org.apache.hadoop.hbase.regionserver.RegionCoprocessorHost.execOperation(RegionCoprocessorHost.java:1734)
+        at org.apache.hadoop.hbase.regionserver.RegionCoprocessorHost.execOperationWithResult(RegionCoprocessorHost.java:1709)
+        at org.apache.hadoop.hbase.regionserver.RegionCoprocessorHost.preScannerOpen(RegionCoprocessorHost.java:1262)
+        at org.apache.hadoop.hbase.regionserver.RSRpcServices.scan(RSRpcServices.java:2418)
+        at org.apache.hadoop.hbase.protobuf.generated.ClientProtos$ClientService$2.callBlockingMethod(ClientProtos.java:32385)
+        at org.apache.hadoop.hbase.ipc.RpcServer.call(RpcServer.java:2150)
+        at org.apache.hadoop.hbase.ipc.CallRunner.run(CallRunner.java:112)
+        at org.apache.hadoop.hbase.ipc.RpcExecutor$Handler.run(RpcExecutor.java:187)
+        at org.apache.hadoop.hbase.ipc.RpcExecutor$Handler.run(RpcExecutor.java:167)</code></pre></figure>
+
+<p>This is easily confirmed in Ranger to be a permission issue, if you have it configured to log. 
+<img src="https://i.imgur.com/8cQARc7.png" alt="Ranger permissions" /></p>
+
+<p>I will provide the proper permissions to HIVE and re-execute:
+<img src="https://i.imgur.com/op2UyaT.png" alt="Ranger Permissions" /></p>
+
+<p><img src="https://i.imgur.com/UxRKmHG.png" alt="Ranger Permissions" /></p>
+
+<p><strong>NOTE:</strong> Also added the user access to the DB Tables for HBASE. I had attempted this with lowercase and yourphoenixdb:*, but it appears to get created all uppercase including the table name.</p>
+
+<p><img src="https://i.imgur.com/vcyPucX.png" alt="Ranger permissions" /></p>
+
+<p><img src="https://i.imgur.com/30zd86t.png" alt="Ranger permissions" /></p>
+
+<p>Validate that our policy changes are pushed down, assuming you are using rangers audit.
+<img src="https://i.imgur.com/vj3wNIJ.png" alt="Policy pushed to ranger" /></p>
+
+<p>Now we have successful creation and a test select on the empty table. 
+<img src="https://i.imgur.com/T1frsNM.png" alt="Hive Select with Phoenix" /></p>
+
+<p>Testing an insert through hive 1.2, results of insert are slow because of the additional overhead.</p>
+
+<p><img src="https://i.imgur.com/pJBhX5l.png" alt="insert" /></p>
+
+<p>We will connect with sql line and see if it is faster.</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="c">#From a host with the phoenix query server installed</span>
+<span class="nb">cd</span> /usr/hdp/current/phoenix-server/bin/
+./sqlline.py</code></pre></figure>
+
+<p>It’s much faster</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">3 rows selected <span class="o">(</span>0.029 seconds<span class="o">)</span></code></pre></figure>
+
+<p>The tests onn LLAP/ hive 2.x failed and the feature is not currently supported, I hope to get it working in the future and follow up.</p>
+
+  </div><a class="u-url" href="/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Thomas Kreutzer&#39;s Git Pages Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Thomas Kreutzer&#39;s Git Pages Blog</li><li><a class="u-email" href="mailto:thomaskreutzer@msn.com">thomaskreutzer@msn.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/thomaskreutzer"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">thomaskreutzer</span></a></li><li><a href="https://www.twitter.com/no-twitter"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">no-twitter</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it&#39;s good to have these items as a reference when I forget what I did a year from now on a project that one time. It&#39;s good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
