@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "NiFi Regisrty with Kerberos"
+title:  "NiFi Registry with Kerberos"
 date:   2019-06-09 08:27:29 -0400
 categories: NiFi security
 author: Thomas Kreutzer
@@ -33,6 +33,6 @@ ERROR 2018-05-22 08:17:52.585 dw-61 - GET /favicon.ico c.h.r.c.GenericExceptionM
 javax.ws.rs.NotFoundException: HTTP 404 Not Found
 {% endhighlight %}
 
-###SOLUTION:
+### SOLUTION:
 After updating it to 32KiB, I am able to get past the error.
 
