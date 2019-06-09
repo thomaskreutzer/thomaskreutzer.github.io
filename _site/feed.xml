@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-06-09T18:49:46-04:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">NiFi Registry with Kerberos</title><link href="http://localhost:4000/nifi/security/2019/06/09/NiFi-Registry-with-Kerberos.html" rel="alternate" type="text/html" title="NiFi Registry with Kerberos" /><published>2019-06-09T08:27:29-04:00</published><updated>2019-06-09T08:27:29-04:00</updated><id>http://localhost:4000/nifi/security/2019/06/09/NiFi-Registry-with-Kerberos</id><content type="html" xml:base="http://localhost:4000/nifi/security/2019/06/09/NiFi-Registry-with-Kerberos.html">&lt;h3 id=&quot;assumptions&quot;&gt;Assumptions:&lt;/h3&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-06-09T19:09:15-04:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">NiFi Registry with Kerberos</title><link href="http://localhost:4000/nifi/security/2019/06/09/NiFi-Registry-with-Kerberos.html" rel="alternate" type="text/html" title="NiFi Registry with Kerberos" /><published>2019-06-09T08:27:29-04:00</published><updated>2019-06-09T08:27:29-04:00</updated><id>http://localhost:4000/nifi/security/2019/06/09/NiFi-Registry-with-Kerberos</id><content type="html" xml:base="http://localhost:4000/nifi/security/2019/06/09/NiFi-Registry-with-Kerberos.html">&lt;h3 id=&quot;assumptions&quot;&gt;Assumptions:&lt;/h3&gt;
 
 &lt;p&gt;Many windows environments have Kerberos enabled behind the curtains for you as with the following scenario. In addition we have a one-way trust configured with the Active Directory domain. This article only covers issues I encountered with early versions of NiFi Registry which may be resolved today in anewer version.&lt;/p&gt;
 
@@ -24,7 +24,31 @@ ERROR 2018-05-22 08:17:52.585 dw-61 - GET /favicon.ico c.h.r.c.GenericExceptionM
 javax.ws.rs.NotFoundException: HTTP 404 Not Found&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;h3 id=&quot;solution&quot;&gt;SOLUTION:&lt;/h3&gt;
-&lt;p&gt;After updating it to 32KiB, I am able to get past the error.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Assumptions:</summary></entry><entry><title type="html">Hive Phoenix Storage Handler on HDP</title><link href="http://localhost:4000/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP.html" rel="alternate" type="text/html" title="Hive Phoenix Storage Handler on HDP" /><published>2019-06-09T05:27:29-04:00</published><updated>2019-06-09T05:27:29-04:00</updated><id>http://localhost:4000/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP</id><content type="html" xml:base="http://localhost:4000/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP.html">&lt;h3 id=&quot;use-case&quot;&gt;Use Case:&lt;/h3&gt;
+&lt;p&gt;After updating it to 32KiB, I am able to get past the error.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Assumptions:</summary></entry><entry><title type="html">Kerberos and Firefox</title><link href="http://localhost:4000/security/2019/06/09/Kerberos-and-firefox.html" rel="alternate" type="text/html" title="Kerberos and Firefox" /><published>2019-06-09T07:27:29-04:00</published><updated>2019-06-09T07:27:29-04:00</updated><id>http://localhost:4000/security/2019/06/09/Kerberos-and-firefox</id><content type="html" xml:base="http://localhost:4000/security/2019/06/09/Kerberos-and-firefox.html">&lt;h3 id=&quot;configuration&quot;&gt;Configuration:&lt;/h3&gt;
+
+&lt;p&gt;Install the MIT Kerberos tools for windows and get a proper ticket. &lt;a href=&quot;http://web.mit.edu/kerberos/dist/&quot;&gt;MIT Kereberos&lt;/a&gt;
+In the firefox URL type about:config&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/y2e7htw.png&quot; alt=&quot;about:config&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Click on accept the risk that you might void your warranty.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/c2ffs7Z.png&quot; alt=&quot;Warranty&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Search on &lt;strong&gt;negotiate-auth&lt;/strong&gt;
+Under &lt;strong&gt;network.negotiate-auth.delegation-uris&lt;/strong&gt; and &lt;strong&gt;network.negotiate-auth.trusted-uris&lt;/strong&gt; we added &lt;strong&gt;yourdomain.com ,.yourdomain.com&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/3iFLrIk.png&quot; alt=&quot;about:config&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Search on &lt;strong&gt;network.auth.use-sspi&lt;/strong&gt; and set it to &lt;strong&gt;false&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/S23LpvW.png&quot; alt=&quot;about:config&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Search on &lt;strong&gt;network.negotiate-auth.gsslib&lt;/strong&gt; and set it to the value for the MIT Kerberos you installed, in our case it was 64 bit with Firefox 64 bit so we set it to &lt;strong&gt;C:\Program Files\MIT\Kerberos\bin\gssapi64.dll&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/yN1qKZM.png&quot; alt=&quot;about:config&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;After this we had successfully configured firefox for Kerberos.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Configuration:</summary></entry><entry><title type="html">Hive Phoenix Storage Handler on HDP</title><link href="http://localhost:4000/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP.html" rel="alternate" type="text/html" title="Hive Phoenix Storage Handler on HDP" /><published>2019-06-09T05:27:29-04:00</published><updated>2019-06-09T05:27:29-04:00</updated><id>http://localhost:4000/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP</id><content type="html" xml:base="http://localhost:4000/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP.html">&lt;h3 id=&quot;use-case&quot;&gt;Use Case:&lt;/h3&gt;
 
 &lt;p&gt;Recently when working on an application with a client we had a need to have fast interactions with small amounts of data but it needed to be available immediately to Hive. The synchronization was critical for another batch process that was decoupled from the interactions of the application. Yes, we could have probably handled this many ways but in the end I wanted to see if we could have the required inserts handled via the web application running on these windows servers. In a prior blog entry I talk about TLS with PowerShell which led into some of these tests.&lt;/p&gt;
 
