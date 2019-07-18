@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Spark Delta’s with Hive | Thomas Kreutzer’s Git Pages Blog</title>
+<meta name="generator" content="Jekyll v3.8.5" />
+<meta property="og:title" content="Spark Delta’s with Hive" />
+<meta name="author" content="Thomas Kreutzer" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Project information:" />
+<meta property="og:description" content="Project information:" />
+<link rel="canonical" href="http://localhost:4000/spark/2019/07/15/Spark-Delta-with-Hive.html" />
+<meta property="og:url" content="http://localhost:4000/spark/2019/07/15/Spark-Delta-with-Hive.html" />
+<meta property="og:site_name" content="Thomas Kreutzer’s Git Pages Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-07-15T08:27:29-04:00" />
+<script type="application/ld+json">
+{"url":"http://localhost:4000/spark/2019/07/15/Spark-Delta-with-Hive.html","headline":"Spark Delta’s with Hive","dateModified":"2019-07-15T08:27:29-04:00","datePublished":"2019-07-15T08:27:29-04:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/spark/2019/07/15/Spark-Delta-with-Hive.html"},"author":{"@type":"Person","name":"Thomas Kreutzer"},"description":"Project information:","@type":"BlogPosting","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Thomas Kreutzer's Git Pages Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Thomas Kreutzer&#39;s Git Pages Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Spark Delta&#39;s with Hive</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2019-07-15T08:27:29-04:00" itemprop="datePublished">Jul 15, 2019
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Thomas Kreutzer</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h3 id="project-information">Project information:</h3>
+
+<p>This project was created to meet very specific requirements for a specific scenario and set of requirements. A delta’s was to be derived by comparing two tables on a daily basis for the delta to create a historical representation of the data. In most cases the reporting only executes against the daily snapshot but in some cases history may be desired. This process was created to compare the previous days snapshot to the current day, the resulting delta is used in a merge statement to update history. Spark was used in order to get the detla information between the two tables. The delta processing requires use to also keep history of when a record is deleted and re-added.</p>
+
+<p><strong>Disclaimer:</strong> There could be other approaches to solve this issue, however due to limitations of time, resources and other factors this direction was chosen. One approach that was suggested would be to use Hive to process the delta instead of spark in some form. I would recommend attempting and testing this approach in your project to see if fewer steps could be executed in order to achieve the goal in a faster time frame. If time permits I will examine this one my own to understand the differences.</p>
+
+<p><strong>Project Goals:</strong></p>
+<ol>
+  <li>A method to store the composite key information for each table</li>
+  <li>Scala code that is re-usable for all tables</li>
+  <li>Compare and get the delta</li>
+  <li>Merge into history <strong>(Will not laid out in major detail, simple SQL example)</strong></li>
+</ol>
+
+<p><strong>Composite Key:</strong>
+As it turns out, all of the tables in this off load had the primary/composite keys as the first columns in the table. It was determined a table would be created to store the table name and offset / number of keys in the table. This allows us to very easily use generic code in order to process the tables in Scala using Spark. Another thing to note in this case is that all of the tables are partitioned. This is considered to be part of the key and is added to the offset.</p>
+
+<h3 id="scala-code-overview">Scala Code Overview:</h3>
+<p>The code is procedural in nature so we will not be creating many classes, we will simply do our work in the main function that will be called. First we will add our package name, imports that we will be using and the main class.</p>
+
+<figure class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">package</span> <span class="nn">com.yourdomain.delta_scala</span>
+
+<span class="k">import</span> <span class="nn">scala.collection.mutable.ArrayBuffer</span>
+<span class="k">import</span> <span class="nn">org.apache.spark.sql.functions.unix_timestamp</span>
+<span class="k">import</span> <span class="nn">org.apache.spark.sql.functions._</span>
+<span class="k">import</span> <span class="nn">org.apache.spark.sql.SparkSession</span>
+<span class="k">import</span> <span class="nn">org.apache.spark.sql.functions.hash</span>
+
+<span class="k">object</span> <span class="nc">App</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="n">main</span><span class="o">(</span><span class="n">args</span> <span class="k">:</span> <span class="kt">Array</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span> <span class="o">{</span>
+<span class="o">}</span></code></pre></figure>
+
+<p>All parameters will be passed in at execution time to the application for execution of a specific table. We will set up the params and initialize all default variables.</p>
+
+<p><strong>Note:</strong> the previous day and delta table are always the table name with a suffix appended. It is also assumed here that the previous days delta is in the location and is handled with a flow that will not be described here.</p>
+
+<figure class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="cm">/*
+* EXAMPLE:
+* /usr/hdp/2.6.4.0-91/spark2/bin/spark-submit
+* --master yarn
+* --driver-memory 2g
+* --num-executors 5
+* --executor-memory 2g
+* --queue yourqueue \
+* --class com.yourdomain.delta_scala.App \
+* /tmp/x003075/delta-scala-0.0.1-snapshot.jar \
+* spark_delta \  --Application name we are executing
+* someStageDb \  --Stage database
+* someTargetDb \ --Target Database
+* someTableName \  --The name of the table you are processing (target)
+* /scripts/hive_hql/  --The location of the HQL's you intend to execute. 
+*
+* /usr/hdp/2.6.4.0-91/spark2/bin/spark-submit --master yarn --driver-memory 2g --num-executors 5 --executor-memory 2g --queue yourqueue --class com.yourclass.delta_scala.App /tmp/delta-scala-0.0.1-snapshot.jar spark_delta stageDb  targetDb tablename /scripts/hive_hql/
+*/</span>
+
+<span class="k">val</span> <span class="n">appName</span> <span class="k">=</span> <span class="n">args</span><span class="o">(</span><span class="mi">3</span><span class="o">)</span> <span class="o">+</span> <span class="s">"_"</span> <span class="o">+</span> <span class="n">args</span><span class="o">(</span><span class="mi">0</span><span class="o">)</span> <span class="c1">//Table name and app name concatenated to make unique
+</span><span class="k">val</span> <span class="n">stageDb</span> <span class="k">=</span> <span class="n">args</span><span class="o">(</span><span class="mi">1</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">targetDb</span> <span class="k">=</span> <span class="n">args</span><span class="o">(</span><span class="mi">2</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">tableName</span> <span class="k">=</span> <span class="n">args</span><span class="o">(</span><span class="mi">3</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">hdfsPath</span> <span class="k">=</span> <span class="s">"hdfs://"</span> <span class="o">+</span> <span class="n">args</span><span class="o">(</span><span class="mi">4</span><span class="o">)</span> <span class="cm">/*This path is now the source location for HQL*/</span>
+    
+<span class="k">val</span> <span class="n">prevDayTbl</span> <span class="k">=</span> <span class="n">tableName</span> <span class="o">+</span> <span class="s">"_prev"</span> <span class="cm">/*The previous day table*/</span>
+<span class="k">val</span> <span class="n">deltaTbl</span> <span class="k">=</span> <span class="n">tableName</span> <span class="o">+</span> <span class="s">"_ct"</span> <span class="cm">/*The detla table*/</span>
+    
+<span class="cm">/* Create the spark session */</span>
+<span class="k">val</span> <span class="n">spark</span> <span class="k">=</span> <span class="nc">SparkSession</span>
+  <span class="o">.</span><span class="n">builder</span><span class="o">()</span>
+  <span class="o">.</span><span class="n">appName</span><span class="o">(</span><span class="n">appName</span><span class="o">)</span>
+  <span class="o">.</span><span class="n">enableHiveSupport</span><span class="o">()</span>
+  <span class="o">.</span><span class="n">getOrCreate</span><span class="o">()</span></code></pre></figure>
+
+<p>The next snippet of code is setting the variable f = to a path in <strong>hdfs</strong> for our select SQL followed by select_hql that is reading in the contents of the file. 
+f2 is setting the variable = to a path in <strong>hdfs</strong> for the insert to our delta table and setting insert_hql equal the contents of the file while parsing out the database name with the stageDb.deltaTbl</p>
+
+<figure class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="cm">/* Get the contents from HDFS */</span>
+<span class="k">val</span> <span class="n">f</span> <span class="k">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">sparkContext</span><span class="o">.</span><span class="n">wholeTextFiles</span><span class="o">(</span><span class="n">hdfsPath</span> <span class="o">+</span> <span class="s">"spark_select/"</span> <span class="o">+</span> <span class="n">tableName</span> <span class="o">+</span> <span class="s">".sql"</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">select_hql</span> <span class="k">=</span> <span class="n">f</span><span class="o">.</span><span class="n">take</span><span class="o">(</span><span class="mi">1</span><span class="o">)(</span><span class="mi">0</span><span class="o">).</span><span class="n">_2</span>
+
+<span class="cm">/* Get the contents from HDFS and parse out text*/</span>
+<span class="k">val</span> <span class="n">f2</span> <span class="k">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">sparkContext</span><span class="o">.</span><span class="n">wholeTextFiles</span><span class="o">(</span><span class="n">hdfsPath</span> <span class="o">+</span> <span class="s">"ins_ct/"</span> <span class="o">+</span> <span class="n">tableName</span> <span class="o">+</span> <span class="s">".sql"</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">insert_hql</span> <span class="k">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">take</span><span class="o">(</span><span class="mi">1</span><span class="o">)(</span><span class="mi">0</span><span class="o">).</span><span class="n">_2</span><span class="o">.</span><span class="n">replace</span><span class="o">(</span><span class="s">"__TARGET__"</span><span class="o">,</span> <span class="n">stageDb</span> <span class="o">+</span> <span class="s">"."</span> <span class="o">+</span> <span class="n">deltaTbl</span><span class="o">)</span>
+     
+<span class="cm">/* Use the select to set two SQL's we will be using later */</span>
+<span class="k">val</span> <span class="n">select_prev</span> <span class="k">=</span> <span class="n">select_hql</span><span class="o">.</span><span class="n">replace</span><span class="o">(</span><span class="s">"__SOURCE__"</span><span class="o">,</span> <span class="n">stageDb</span> <span class="o">+</span> <span class="s">"."</span> <span class="o">+</span> <span class="n">prevDayTbl</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">select_curr</span> <span class="k">=</span> <span class="n">select_hql</span><span class="o">.</span><span class="n">replace</span><span class="o">(</span><span class="s">"__SOURCE__"</span><span class="o">,</span> <span class="n">targetDb</span> <span class="o">+</span> <span class="s">"."</span> <span class="o">+</span> <span class="n">tableName</span><span class="o">)</span></code></pre></figure>
+
+<p>In the following snippet we will create a data from for the previous, current and our key tables. This is followed by two statements that get the columns from the data frames. They key count is the offset of our primary/composite key. 
+<strong>NOTE:</strong> I am using the upper clause here in order to ensure that we match the case for the table name regardless. If I am not mistaken we saw an issue when someone put in a different case.</p>
+
+<figure class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">val</span> <span class="n">df_prev</span> <span class="k">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="o">(</span><span class="n">select_prev</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">df_curr</span> <span class="k">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="o">(</span><span class="n">select_curr</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">df_key_table</span> <span class="k">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="o">(</span><span class="s">"SELECT key_cnt FROM "</span> <span class="o">+</span> <span class="n">stageDb</span> <span class="o">+</span> <span class="s">".etl_key_count WHERE upper(table_name) = '"</span> <span class="o">+</span> <span class="n">tableName</span><span class="o">.</span><span class="n">toUpperCase</span><span class="o">()</span> <span class="o">+</span> <span class="s">"'"</span><span class="o">)</span>
+ 
+<span class="k">val</span> <span class="n">df_prev_table_columns</span> <span class="k">=</span> <span class="n">df_prev</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">toSeq</span>
+<span class="k">val</span> <span class="n">df_curr_table_columns</span> <span class="k">=</span> <span class="n">df_curr</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">toSeq</span></code></pre></figure>
+
+<p>Now we will pull the key count from the table followed by another variable <strong>key_columns</strong> that will contain all of the keys for the table.</p>
+
+<figure class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">val</span> <span class="n">key_count</span> <span class="k">=</span> <span class="n">df_key_table</span><span class="o">.</span><span class="n">select</span><span class="o">(</span><span class="n">col</span><span class="o">(</span><span class="s">"key_cnt"</span><span class="o">)).</span><span class="n">first</span><span class="o">.</span><span class="n">getInt</span><span class="o">(</span><span class="mi">0</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">key_columns</span> <span class="k">=</span> <span class="n">df_curr_table_columns</span><span class="o">.</span><span class="n">slice</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span><span class="n">key_count</span><span class="o">)</span></code></pre></figure>
+
+<p>Next we want to create two arrays.</p>
+<ol>
+  <li>An array of key columns</li>
+  <li>An array of all columns</li>
+</ol>
+
+<figure class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">val</span> <span class="n">all_columns</span> <span class="k">=</span> <span class="n">df_curr_table_columns</span><span class="o">.</span><span class="n">slice</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span><span class="n">df_curr_table_columns</span><span class="o">.</span><span class="n">size</span><span class="o">)</span>
+
+<span class="o">*/</span><span class="nc">Create</span> <span class="n">all</span> <span class="n">columns</span> <span class="n">array</span><span class="o">*/</span>
+<span class="k">val</span> <span class="n">all_cols_array</span> <span class="k">=</span> <span class="nc">ArrayBuffer</span><span class="o">[</span><span class="kt">String</span><span class="o">]()</span>
+<span class="k">for</span> <span class="o">(</span><span class="n">v</span> <span class="k">&lt;-</span> <span class="n">all_columns</span><span class="o">)</span> <span class="n">all_cols_array</span> <span class="o">+=</span> <span class="n">v</span>
+
+<span class="cm">/*Create key columns array*/</span>
+<span class="k">val</span> <span class="n">key_cols_array</span> <span class="k">=</span> <span class="nc">ArrayBuffer</span><span class="o">[</span><span class="kt">String</span><span class="o">]()</span>
+<span class="k">for</span> <span class="o">(</span><span class="n">v</span> <span class="k">&lt;-</span> <span class="n">key_columns</span><span class="o">)</span> <span class="n">key_cols_array</span> <span class="o">+=</span> <span class="n">v</span></code></pre></figure>
+
+<p>Next we are going to concat all of the columns together for the keys and non-key columns independently. These will be used to execute a comparison. For performance purposes, we will also convert the concatenated data for the non-key values into a hash. You can choose to add this for the key columns if required. In most cases our concatenation of key columns is rather small and numeric so we have not hashed them.</p>
+
+<figure class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">var</span> <span class="n">df_prev_key_columns</span> <span class="k">=</span> <span class="n">df_prev</span><span class="o">.</span><span class="n">withColumn</span><span class="o">(</span> <span class="s">"df_prev_table_key_columns_concat"</span><span class="o">,</span> <span class="n">concat_ws</span><span class="o">(</span><span class="s">""</span><span class="o">,</span> <span class="n">key_cols_array</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="n">c</span> <span class="k">=&gt;</span> <span class="n">col</span><span class="o">(</span><span class="n">c</span><span class="o">))</span><span class="k">:</span> <span class="k">_</span><span class="kt">*</span><span class="o">)</span> <span class="o">)</span>
+<span class="k">var</span> <span class="n">df_prev_all_columns</span> <span class="k">=</span> <span class="n">df_prev_key_columns</span><span class="o">.</span><span class="n">withColumn</span><span class="o">(</span> <span class="s">"df_prev_table_columns_concat"</span><span class="o">,</span> <span class="n">hash</span><span class="o">(</span><span class="n">concat_ws</span><span class="o">(</span><span class="s">""</span><span class="o">,</span> <span class="n">all_cols_array</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="n">c</span> <span class="k">=&gt;</span> <span class="n">col</span><span class="o">(</span><span class="n">c</span><span class="o">))</span><span class="k">:</span> <span class="k">_</span><span class="kt">*</span><span class="o">))</span> <span class="o">)</span>
+
+<span class="k">var</span> <span class="n">df_curr_key_columns</span> <span class="k">=</span> <span class="n">df_curr</span><span class="o">.</span><span class="n">withColumn</span><span class="o">(</span> <span class="s">"df_curr_table_key_columns_concat"</span><span class="o">,</span> <span class="n">concat_ws</span><span class="o">(</span><span class="s">""</span><span class="o">,</span> <span class="n">key_cols_array</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="n">c</span> <span class="k">=&gt;</span> <span class="n">col</span><span class="o">(</span><span class="n">c</span><span class="o">))</span><span class="k">:</span> <span class="k">_</span><span class="kt">*</span><span class="o">)</span> <span class="o">)</span>
+<span class="k">var</span> <span class="n">df_curr_all_columns</span> <span class="k">=</span> <span class="n">df_curr_key_columns</span><span class="o">.</span><span class="n">withColumn</span><span class="o">(</span> <span class="s">"df_curr_table_columns_concat"</span><span class="o">,</span> <span class="n">hash</span><span class="o">(</span><span class="n">concat_ws</span><span class="o">(</span><span class="s">""</span><span class="o">,</span> <span class="n">all_cols_array</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="n">c</span> <span class="k">=&gt;</span> <span class="n">col</span><span class="o">(</span><span class="n">c</span><span class="o">))</span><span class="k">:</span> <span class="k">_</span><span class="kt">*</span><span class="o">))</span> <span class="o">)</span>
+
+<span class="cm">/* Create views */</span>
+<span class="n">df_prev_all_columns</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="o">(</span><span class="s">"prev"</span><span class="o">)</span>
+<span class="n">df_curr_all_columns</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="o">(</span><span class="s">"curr"</span><span class="o">)</span></code></pre></figure>
+
+<p>We have collected the information required to create data frames for each of the delta’s</p>
+<ol>
+  <li>Deleted</li>
+  <li>Inserted</li>
+  <li>Updated</li>
+</ol>
+
+<p><strong>NOTE</strong> we are adding a timestamp to each of the quiries to specifiy the time in when the etl transaction takes place. 
+Deleted records also get their own flag, in essence we are doing soft deletes using this flag.</p>
+
+<figure class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">val</span> <span class="n">df_deleted</span>  <span class="k">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="o">(</span><span class="s">"SELECT current_timestamp() as etl_ld_dttm, 'D' as header__change_oper,1 as header__deleted, p.* FROM prev p LEFT OUTER JOIN curr c ON p.df_prev_table_key_columns_concat = c.df_curr_table_key_columns_concat WHERE df_curr_table_key_columns_concat IS NULL"</span><span class="o">).</span><span class="n">drop</span><span class="o">(</span><span class="s">"df_prev_table_key_columns_concat"</span><span class="o">,</span> <span class="s">"df_prev_table_columns_concat"</span><span class="o">)</span>
+
+<span class="k">val</span> <span class="n">df_inserted</span> <span class="k">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="o">(</span><span class="s">"SELECT current_timestamp() as etl_ld_dttm, 'I' as header__change_oper,0 as header__deleted, c.* FROM prev p RIGHT OUTER JOIN curr c ON p.df_prev_table_key_columns_concat = c.df_curr_table_key_columns_concat WHERE df_prev_table_key_columns_concat IS NULL"</span><span class="o">).</span><span class="n">drop</span><span class="o">(</span><span class="s">"df_curr_table_key_columns_concat"</span><span class="o">,</span> <span class="s">"df_curr_table_columns_concat"</span><span class="o">)</span>
+
+<span class="k">val</span> <span class="n">df_modified</span> <span class="k">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="o">(</span><span class="s">"SELECT current_timestamp() as etl_ld_dttm, 'U' as header__change_oper,0 as header__deleted, c.* FROM prev p INNER JOIN curr c ON p.df_prev_table_key_columns_concat = c.df_curr_table_key_columns_concat AND p.df_prev_table_columns_concat &lt;&gt; c.df_curr_table_columns_concat"</span><span class="o">).</span><span class="n">drop</span><span class="o">(</span><span class="s">"df_curr_table_key_columns_concat"</span><span class="o">,</span> <span class="s">"df_curr_table_columns_concat"</span><span class="o">)</span></code></pre></figure>
+
+<p><strong>NOTE: Then next snippet is informational only and is not used in this project</strong></p>
+
+<p>Another way to do it similar to what you see above is with pure Scala code in place of the spark sql. Depending on your preference one may be easier than the other. I personally prefer SQL.</p>
+
+<figure class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">val</span> <span class="n">df_modified</span> <span class="k">=</span> <span class="n">df_prev_all_columns</span><span class="o">.</span><span class="n">join</span><span class="o">(</span><span class="n">df_curr_all_columns</span><span class="o">.</span><span class="n">as</span><span class="o">(</span><span class="s">"df_curr_all_columns"</span><span class="o">),</span> <span class="o">(</span><span class="n">df_curr_all_columns</span><span class="o">(</span><span class="s">"df_curr_table_key_columns_concat"</span><span class="o">)</span> <span class="o">===</span> <span class="n">df_prev_all_columns</span><span class="o">(</span><span class="s">"df_prev_table_key_columns_concat"</span><span class="o">))</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">df_curr_all_columns</span><span class="o">(</span><span class="s">"df_curr_table_columns_concat"</span><span class="o">)</span> <span class="o">!==</span> <span class="n">df_prev_all_columns</span><span class="o">(</span><span class="s">"df_prev_table_columns_concat"</span><span class="o">))</span> <span class="o">)</span></code></pre></figure>
+
+<p>All of the results are concatenated into a single dataframe.</p>
+
+<figure class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">val</span> <span class="n">unioned_df</span> <span class="k">=</span> <span class="n">df_inserted</span><span class="o">.</span><span class="n">union</span><span class="o">(</span><span class="n">df_deleted</span><span class="o">).</span><span class="n">union</span><span class="o">(</span><span class="n">df_modified</span><span class="o">)</span>
+<span class="n">unioned_df</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="o">(</span><span class="s">"ins_data_df"</span><span class="o">)</span></code></pre></figure>
+
+<p>Finally we execute a purge from the hive stage table where the data is stored for the merge.</p>
+
+<figure class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="o">(</span><span class="s">"set hive.exec.dynamic.partition.mode=nonstrict"</span><span class="o">)</span>
+<span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="o">(</span><span class="s">"TRUNCATE TABLE "</span> <span class="o">+</span> <span class="n">stageDb</span> <span class="o">+</span> <span class="s">"."</span> <span class="o">+</span> <span class="n">deltaTbl</span><span class="o">)</span>
+<span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="o">(</span><span class="n">insert_hql</span><span class="o">)</span></code></pre></figure>
+
+<h3 id="sql-information">SQL information:</h3>
+
+<p><strong>SQL for select example:</strong></p>
+
+<figure class="highlight"><pre><code class="language-sql" data-lang="sql"><span class="k">SELECT</span>
+  <span class="n">partition_col</span>
+  <span class="p">,</span><span class="nv">`key_col_1`</span>
+  <span class="p">,</span><span class="nv">`key_col_2`</span>
+  <span class="p">,</span><span class="nv">`non_key_col_1`</span>
+  <span class="p">,</span><span class="nv">`non_key_col_2`</span>
+  <span class="p">,</span><span class="nv">`non_key_col_3`</span>
+  <span class="p">,</span><span class="nv">`non_key_col_4`</span>
+  <span class="p">,</span><span class="nv">`non_key_col_5`</span>
+  <span class="p">,</span><span class="nv">`non_key_col_6`</span>
+  <span class="p">,</span><span class="nv">`non_key_col_7`</span>
+  <span class="p">,</span><span class="nv">`non_key_col_8`</span>
+  <span class="p">,</span><span class="nv">`non_key_col_9`</span>
+  <span class="p">,</span><span class="nv">`non_key_col_10`</span>
+<span class="k">FROM</span> <span class="n">__SOURCE__</span></code></pre></figure>
+
+<p><strong>SQL for merge example:</strong></p>
+
+<figure class="highlight"><pre><code class="language-sql" data-lang="sql"><span class="k">SET</span> <span class="n">tez</span><span class="p">.</span><span class="n">queue</span><span class="p">.</span><span class="n">name</span><span class="o">=</span><span class="n">production</span><span class="p">;</span>
+<span class="k">SET</span> <span class="n">hive</span><span class="p">.</span><span class="n">tez</span><span class="p">.</span><span class="n">container</span><span class="p">.</span><span class="k">size</span><span class="o">=</span><span class="mi">6168</span><span class="p">;</span>
+<span class="k">SET</span> <span class="n">hive</span><span class="p">.</span><span class="n">tez</span><span class="p">.</span><span class="n">java</span><span class="p">.</span><span class="n">opts</span><span class="o">=-</span><span class="n">Xmx4934m</span><span class="p">;</span>
+<span class="k">SET</span> <span class="n">hive</span><span class="p">.</span><span class="n">merge</span><span class="p">.</span><span class="k">cardinality</span><span class="p">.</span><span class="k">check</span><span class="o">=</span><span class="k">false</span><span class="p">;</span>
+<span class="k">SET</span> <span class="n">hive</span><span class="p">.</span><span class="n">vectorized</span><span class="p">.</span><span class="n">execution</span><span class="p">.</span><span class="n">enabled</span><span class="o">=</span><span class="k">true</span><span class="p">;</span>
+<span class="k">SET</span> <span class="n">hive</span><span class="p">.</span><span class="n">vectorized</span><span class="p">.</span><span class="n">execution</span><span class="p">.</span><span class="n">reduce</span><span class="p">.</span><span class="n">enabled</span><span class="o">=</span><span class="k">true</span><span class="p">;</span>
+<span class="k">SET</span> <span class="n">hive</span><span class="p">.</span><span class="n">cbo</span><span class="p">.</span><span class="n">enable</span><span class="o">=</span><span class="k">true</span><span class="p">;</span>
+<span class="k">SET</span> <span class="n">hive</span><span class="p">.</span><span class="n">compute</span><span class="p">.</span><span class="n">query</span><span class="p">.</span><span class="k">using</span><span class="p">.</span><span class="n">stats</span><span class="o">=</span><span class="k">true</span><span class="p">;</span>
+<span class="k">SET</span> <span class="n">hive</span><span class="p">.</span><span class="n">stats</span><span class="p">.</span><span class="k">fetch</span><span class="p">.</span><span class="k">column</span><span class="p">.</span><span class="n">stats</span><span class="o">=</span><span class="k">true</span><span class="p">;</span>
+<span class="k">SET</span> <span class="n">hive</span><span class="p">.</span><span class="n">stats</span><span class="p">.</span><span class="k">fetch</span><span class="p">.</span><span class="n">partition</span><span class="p">.</span><span class="n">stats</span><span class="o">=</span><span class="k">true</span><span class="p">;</span>
+<span class="k">SET</span> <span class="n">mapred</span><span class="p">.</span><span class="n">reduce</span><span class="p">.</span><span class="n">tasks</span><span class="o">=</span><span class="mi">20</span><span class="p">;</span>
+
+<span class="n">MERGE</span> <span class="k">INTO</span> <span class="n">db_hist</span><span class="p">.</span><span class="n">target_table</span> <span class="k">AS</span> <span class="n">t</span>
+<span class="k">USING</span>
+<span class="p">(</span>
+  <span class="k">SELECT</span>
+    <span class="mi">1</span> <span class="k">AS</span> <span class="n">END_DATE</span><span class="p">,</span> <span class="n">target_table_ct</span><span class="p">.</span><span class="o">*</span>
+  <span class="k">FROM</span> <span class="n">stageDb</span><span class="p">.</span><span class="n">target_table_ct</span>
+  <span class="k">WHERE</span>
+    <span class="n">header__change_oper</span> <span class="k">IN</span> <span class="p">(</span><span class="s1">'U'</span><span class="p">,</span> <span class="s1">'D'</span><span class="p">)</span>
+  <span class="k">UNION</span> <span class="k">ALL</span>
+  <span class="k">SELECT</span>
+    <span class="mi">0</span> <span class="k">AS</span> <span class="n">END_DATE</span><span class="p">,</span> <span class="n">target_table_ct</span><span class="p">.</span><span class="o">*</span>
+  <span class="k">FROM</span> <span class="n">stageDb</span><span class="p">.</span><span class="n">target_table_ct</span>
+  <span class="k">WHERE</span>
+    <span class="n">header__change_oper</span> <span class="k">IN</span> <span class="p">(</span><span class="s1">'U'</span><span class="p">,</span> <span class="s1">'I'</span><span class="p">)</span>
+<span class="p">)</span> <span class="k">AS</span> <span class="n">s</span>
+<span class="k">ON</span>
+  <span class="n">t</span><span class="p">.</span><span class="n">partition_col</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">partition_col</span>
+  <span class="k">AND</span> <span class="n">t</span><span class="p">.</span><span class="nv">`key_col_1`</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="nv">`key_col_1`</span>
+  <span class="k">AND</span> <span class="n">t</span><span class="p">.</span><span class="nv">`key_col_2`</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="nv">`key_col_2`</span>
+  <span class="k">AND</span> <span class="n">s</span><span class="p">.</span><span class="n">END_DATE</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="k">WHEN</span> <span class="n">MATCHED</span>
+  <span class="k">AND</span> <span class="n">t</span><span class="p">.</span><span class="n">header__to_date</span> <span class="o">=</span> <span class="k">CAST</span><span class="p">(</span><span class="k">CAST</span><span class="p">(</span><span class="s1">'9999-12-31'</span> <span class="k">AS</span> <span class="n">DATE</span><span class="p">)</span> <span class="k">AS</span> <span class="k">TIMESTAMP</span><span class="p">)</span>
+  <span class="k">AND</span> <span class="n">t</span><span class="p">.</span><span class="n">etl_ld_dttm</span> <span class="o">&lt;&gt;</span> <span class="n">s</span><span class="p">.</span><span class="n">etl_ld_dttm</span>
+<span class="k">THEN</span> <span class="k">UPDATE</span>
+<span class="k">SET</span>
+  <span class="n">header__to_date</span> <span class="o">=</span> <span class="k">current_timestamp</span><span class="p">(),</span>
+  <span class="n">header__deleted</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">header__deleted</span>
+<span class="k">WHEN</span> <span class="k">NOT</span> <span class="n">MATCHED</span>
+  <span class="k">AND</span> <span class="n">s</span><span class="p">.</span><span class="n">END_DATE</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">THEN</span> <span class="k">INSERT</span> <span class="k">VALUES</span> <span class="p">(</span>
+  <span class="n">s</span><span class="p">.</span><span class="nv">`etl_ld_dttm`</span>
+  <span class="p">,</span><span class="k">current_timestamp</span><span class="p">()</span>
+  <span class="p">,</span><span class="k">CAST</span><span class="p">(</span><span class="k">CAST</span><span class="p">(</span><span class="s1">'9999-12-31'</span> <span class="k">AS</span> <span class="n">DATE</span><span class="p">)</span> <span class="k">AS</span> <span class="k">TIMESTAMP</span><span class="p">)</span>
+  <span class="p">,</span><span class="mi">0</span>
+  <span class="p">,</span><span class="n">s</span><span class="p">.</span><span class="nv">`key_col_1`</span>
+  <span class="p">,</span><span class="n">s</span><span class="p">.</span><span class="nv">`key_col_2`</span>
+  <span class="p">,</span><span class="n">s</span><span class="p">.</span><span class="nv">`non_key_col_1`</span>
+  <span class="p">,</span><span class="n">s</span><span class="p">.</span><span class="nv">`non_key_col_2`</span>
+  <span class="p">,</span><span class="n">s</span><span class="p">.</span><span class="nv">`non_key_col_4`</span>
+  <span class="p">,</span><span class="n">s</span><span class="p">.</span><span class="nv">`non_key_col_5`</span>
+  <span class="p">,</span><span class="n">s</span><span class="p">.</span><span class="nv">`non_key_col_6`</span>
+  <span class="p">,</span><span class="n">s</span><span class="p">.</span><span class="nv">`non_key_col_7`</span>
+  <span class="p">,</span><span class="n">s</span><span class="p">.</span><span class="nv">`non_key_col_8`</span>
+  <span class="p">,</span><span class="n">s</span><span class="p">.</span><span class="nv">`non_key_col_9`</span>
+  <span class="p">,</span><span class="n">s</span><span class="p">.</span><span class="nv">`non_key_col_10`</span>
+  <span class="p">,</span><span class="n">s</span><span class="p">.</span><span class="nv">`part_col`</span>
+<span class="p">);</span></code></pre></figure>
+
+  </div><a class="u-url" href="/spark/2019/07/15/Spark-Delta-with-Hive.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Thomas Kreutzer&#39;s Git Pages Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Thomas Kreutzer&#39;s Git Pages Blog</li><li><a class="u-email" href="mailto:thomaskreutzer@msn.com">thomaskreutzer@msn.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/thomaskreutzer"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">thomaskreutzer</span></a></li><li><a href="https://www.twitter.com/no-twitter"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">no-twitter</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it&#39;s good to have these items as a reference when I forget what I did a year from now on a project that one time. It&#39;s good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
