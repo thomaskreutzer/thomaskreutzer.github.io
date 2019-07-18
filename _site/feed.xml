@@ -1,4 +1,84 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-07-18T10:49:45-04:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">Spark Delta’s with Hive</title><link href="http://localhost:4000/spark/2019/07/15/Spark-Delta-with-Hive.html" rel="alternate" type="text/html" title="Spark Delta's with Hive" /><published>2019-07-15T08:27:29-04:00</published><updated>2019-07-15T08:27:29-04:00</updated><id>http://localhost:4000/spark/2019/07/15/Spark-Delta-with-Hive</id><content type="html" xml:base="http://localhost:4000/spark/2019/07/15/Spark-Delta-with-Hive.html">&lt;h3 id=&quot;project-information&quot;&gt;Project information:&lt;/h3&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-07-18T11:23:36-04:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">Spark Hbase Connector Insert/Update with SHC on spark-shell</title><link href="http://localhost:4000/spark/2019/07/18/Spark-Hbase-Connector-Upsert.html" rel="alternate" type="text/html" title="Spark Hbase Connector Insert/Update with SHC on spark-shell" /><published>2019-07-18T08:27:29-04:00</published><updated>2019-07-18T08:27:29-04:00</updated><id>http://localhost:4000/spark/2019/07/18/Spark-Hbase-Connector-Upsert</id><content type="html" xml:base="http://localhost:4000/spark/2019/07/18/Spark-Hbase-Connector-Upsert.html">&lt;h3 id=&quot;goal&quot;&gt;Goal:&lt;/h3&gt;
+
+&lt;p&gt;Gather the dependencies to quickly use spark shell with SHC to test inserts/updates of data in Hbase.&lt;/p&gt;
+
+&lt;h3 id=&quot;steps&quot;&gt;Steps:&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;Find the SHC library on your HDP cluster&lt;/strong&gt;
+Assuming you have locate installed on your linux box, I used the following command to find the local copy of shc to use with my spark project.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;%locate shc-core
+/usr/hdp/2.6.5.0-292/shc/shc-core-1.1.0.2.6.5.0-292.jar&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;In addition I configured the cluster to have hbase-site.xml as a symlink in the spark2 con, adding –files /etc/hbase/conf/hbase-site.xml did not work properly for me.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;su
+&lt;span class=&quot;nb&quot;&gt;ln&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; /etc/hbase/conf/hbase-site.xml /etc/spark2/conf/hbase-site.xml&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;I included all the jar files for shc and HBase on the command line as follows when starting spark-shell&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;spark-shell &lt;span class=&quot;nt&quot;&gt;--driver-memory&lt;/span&gt; 5g &lt;span class=&quot;nt&quot;&gt;--jars&lt;/span&gt; /usr/hdp/2.6.5.0-292/shc/shc-core-1.1.0.2.6.5.0-292.jar,/usr/hdp/current/hbase-client/lib/hbase-common.jar,/usr/hdp/current/hbase-client/lib/hbase-client.jar,/usr/hdp/current/hbase-client/lib/hbase-server.jar,/usr/hdp/current/hbase-client/lib/hbase-protocol.jar,/usr/hdp/current/hbase-client/lib/guava-12.0.1.jar,/usr/hdp/current/hbase-client/lib/htrace-core-3.1.0-incubating.jar&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;&lt;strong&gt;Sample Code&lt;/strong&gt;
+Finally, the sample code below was able to run an insert/update to an hbase cell in my table. You may notices the data types and I can’t yet explain it. I ran into many issues with the class and object to get this to work.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.apache.spark.sql.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;SQLContext&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.apache.spark.sql.execution.datasources.hbase._&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.apache.spark.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;SparkConf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SparkContext&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;paste&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;myRecord&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;String&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;completed&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;String&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;object&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;myRecord&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;apply&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;completed&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;myRecord&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;myRecord&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;completed&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; 
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mycatalog&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;{
+  &quot;table&quot;:{&quot;namespace&quot;:&quot;default&quot;, &quot;name&quot;:&quot;mysparktable&quot;, &quot;tableCoder&quot;:&quot;PrimitiveType&quot;},
+  &quot;rowkey&quot;:&quot;key&quot;,
+  &quot;columns&quot;:{
+    &quot;id&quot;:{&quot;cf&quot;:&quot;rowkey&quot;, &quot;col&quot;:&quot;key&quot;, &quot;type&quot;:&quot;string&quot;},
+    &quot;completed&quot;:{&quot;cf&quot;:&quot;f&quot;, &quot;col&quot;:&quot;c&quot;, &quot;type&quot;:&quot;String&quot;}
+  }
+}&quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stripMargin&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;withCatalog&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cat&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;DataFrame&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;spark&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;read&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;HBaseTableCatalog&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tableCatalog&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;org.apache.spark.sql.execution.datasources.hbase&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;load&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//Simple method to read from the table
+//val df = withCatalog(mycatalog)
+//df.registerTempTable(&quot;mytempsparktable&quot;)
+//spark.sql(&quot;select id, completed from mytempsparktable&quot;).show
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;test&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myRecord&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;12345&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;1&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;//That's the kinda thing an idiot would have on his luggage!
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Array&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sc&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;spark&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sparkContext&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;sc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;parallelize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toDF&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;HBaseTableCatalog&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tableCatalog&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mycatalog&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;HBaseTableCatalog&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;newTable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;5&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;org.apache.spark.sql.execution.datasources.hbase&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;save&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+
+
+&lt;span class=&quot;c1&quot;&gt;//Filtered by rowkey show both
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df1&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;withCatalog&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mycatalog&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;df1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;simid&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;12345&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;select&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;simid&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;completed&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;show&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Goal:</summary></entry><entry><title type="html">Spark Delta’s with Hive</title><link href="http://localhost:4000/spark/2019/07/15/Spark-Delta-with-Hive.html" rel="alternate" type="text/html" title="Spark Delta's with Hive" /><published>2019-07-15T08:27:29-04:00</published><updated>2019-07-15T08:27:29-04:00</updated><id>http://localhost:4000/spark/2019/07/15/Spark-Delta-with-Hive</id><content type="html" xml:base="http://localhost:4000/spark/2019/07/15/Spark-Delta-with-Hive.html">&lt;h3 id=&quot;project-information&quot;&gt;Project information:&lt;/h3&gt;
 
 &lt;p&gt;This project was created to meet very specific requirements for a specific scenario and set of requirements. A delta’s was to be derived by comparing two tables on a daily basis for the delta to create a historical representation of the data. In most cases the reporting only executes against the daily snapshot but in some cases history may be desired. This process was created to compare the previous days snapshot to the current day, the resulting delta is used in a merge statement to update history. Spark was used in order to get the detla information between the two tables. The delta processing requires use to also keep history of when a record is deleted and re-added.&lt;/p&gt;
 
@@ -242,7 +322,7 @@ Deleted records also get their own flag, in essence we are doing soft deletes us
   &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;`part_col`&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Project information:</summary></entry><entry><title type="html">NiFi Registry with Kerberos</title><link href="http://localhost:4000/nifi/security/2019/06/09/NiFi-Registry-with-Kerberos.html" rel="alternate" type="text/html" title="NiFi Registry with Kerberos" /><published>2019-06-09T08:27:29-04:00</published><updated>2019-06-09T08:27:29-04:00</updated><id>http://localhost:4000/nifi/security/2019/06/09/NiFi-Registry-with-Kerberos</id><content type="html" xml:base="http://localhost:4000/nifi/security/2019/06/09/NiFi-Registry-with-Kerberos.html">&lt;h3 id=&quot;assumptions&quot;&gt;Assumptions:&lt;/h3&gt;
 
-&lt;p&gt;Many windows environments have Kerberos enabled behind the curtains for you as with the following scenario. In addition we have a one-way trust configured with the Active Directory domain. This article only covers issues I encountered with early versions of NiFi Registry which may be resolved today in anewer version.&lt;/p&gt;
+&lt;p&gt;Many windows environments have Kerberos enabled behind the curtains for you as with the following scenario. In addition we have a one-way trust configured with the Active Directory domain. This article only covers issues I encountered with early versions of NiFi Registry which may be resolved today in a newer version.&lt;/p&gt;
 
 &lt;h3 id=&quot;issue&quot;&gt;Issue:&lt;/h3&gt;
 &lt;p&gt;&lt;img src=&quot;https://i.imgur.com/p0a2rC3.png&quot; alt=&quot;Bad Message&quot; /&gt;&lt;/p&gt;

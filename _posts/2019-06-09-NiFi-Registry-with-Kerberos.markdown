@@ -7,7 +7,7 @@ author: Thomas Kreutzer
 ---
 ### Assumptions:
 
-Many windows environments have Kerberos enabled behind the curtains for you as with the following scenario. In addition we have a one-way trust configured with the Active Directory domain. This article only covers issues I encountered with early versions of NiFi Registry which may be resolved today in anewer version.
+Many windows environments have Kerberos enabled behind the curtains for you as with the following scenario. In addition we have a one-way trust configured with the Active Directory domain. This article only covers issues I encountered with early versions of NiFi Registry which may be resolved today in a newer version.
 
 ### Issue:
 ![Bad Message](https://i.imgur.com/p0a2rC3.png)
