@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Hive log parsing | Thomas Kreutzer’s Git Pages Blog</title>
+<meta name="generator" content="Jekyll v3.8.5" />
+<meta property="og:title" content="Hive log parsing" />
+<meta name="author" content="Thomas Kreutzer" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Description: I work with clients that have not installed SmartSense and we need to upload logs for support cases. Data must be removed such as table names, IP addresses, kerberos realms, user names, database names." />
+<meta property="og:description" content="Description: I work with clients that have not installed SmartSense and we need to upload logs for support cases. Data must be removed such as table names, IP addresses, kerberos realms, user names, database names." />
+<link rel="canonical" href="http://localhost:4000/hdp/hive/2019/07/25/Hive_log-parsing.html" />
+<meta property="og:url" content="http://localhost:4000/hdp/hive/2019/07/25/Hive_log-parsing.html" />
+<meta property="og:site_name" content="Thomas Kreutzer’s Git Pages Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-07-25T08:27:29-04:00" />
+<script type="application/ld+json">
+{"url":"http://localhost:4000/hdp/hive/2019/07/25/Hive_log-parsing.html","headline":"Hive log parsing","dateModified":"2019-07-25T08:27:29-04:00","datePublished":"2019-07-25T08:27:29-04:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/hdp/hive/2019/07/25/Hive_log-parsing.html"},"author":{"@type":"Person","name":"Thomas Kreutzer"},"description":"Description: I work with clients that have not installed SmartSense and we need to upload logs for support cases. Data must be removed such as table names, IP addresses, kerberos realms, user names, database names.","@type":"BlogPosting","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Thomas Kreutzer's Git Pages Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Thomas Kreutzer&#39;s Git Pages Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Hive log parsing</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2019-07-25T08:27:29-04:00" itemprop="datePublished">Jul 25, 2019
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Thomas Kreutzer</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h3 id="description">Description:</h3>
+<p>I work with clients that have not installed SmartSense and we need to upload logs for support cases. Data must be removed such as table names, IP addresses, kerberos realms, user names, database names.</p>
+
+<p>This is a quick script, it would likely require tweaking to your requirements. This is by no means the most optimal method, but will get you by in a pinch and removes SQL queries from the log even if on multiple lines.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="s">'''
+HIVE LOG PARSER
+Parses out the hiveserver log files including multi-line SQL.
+May require some tweaks, please check the output of your log files.
+'''</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">file_search</span><span class="o">=</span><span class="s">'hive'</span>
+<span class="n">write_to_file</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="n">skip_next_expression</span> <span class="o">=</span> <span class="bp">False</span>
+
+<span class="k">def</span> <span class="nf">coll_files</span><span class="p">(</span><span class="n">file_nm_contains</span><span class="p">):</span>
+    <span class="n">myarr</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="s">"."</span><span class="p">):</span>
+        <span class="k">for</span> <span class="nb">file</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">file_nm_contains</span> <span class="ow">in</span> <span class="nb">file</span><span class="p">:</span>
+                <span class="n">myarr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">myarr</span>
+
+<span class="k">def</span> <span class="nf">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'10.30.(</span><span class="err">\</span><span class="s">d+).(</span><span class="err">\</span><span class="s">d+)'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'IP'</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+   
+    <span class="n">p2</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'x(</span><span class="err">\</span><span class="s">d{1,7})'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p2</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'usr'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p3</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'xvic(</span><span class="err">\</span><span class="s">d{1,7})'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p3</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'usr'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p4</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'hostserverprefix'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p4</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'svr'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p5</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'.some.domain'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p5</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">''</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p6</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'SOME.REALM.YOURENV.COM'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p6</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'REALM.COM'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p7</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'specific_id,'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p7</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'user'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p8</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'db=(.*)</span><span class="err">\</span><span class="s">s{0,2}pat='</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p8</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'db=sdb pat=*'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p8</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'ugi=(.*)</span><span class="err">\</span><span class="s">sip='</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p8</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'ugi=id sip='</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p9</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'tbl=(.*)'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p9</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'tbl=tbl'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p10</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'owner=(.*)</span><span class="err">\</span><span class="s">s{1}'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p10</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'owner=usr '</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p11</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'get_function:</span><span class="err">\</span><span class="s">s*(.*</span><span class="err">\</span><span class="s">..*)</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p11</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'get_function:rmfunct</span><span class="se">\n</span><span class="s">'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p12</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'get_database:</span><span class="err">\</span><span class="s">s*(.*)</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p12</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'get_database: db</span><span class="se">\n</span><span class="s">'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p13</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'db=(.*)</span><span class="err">\</span><span class="s">s*tbl='</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p13</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'db=db tbl='</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p14</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'Parsing command: (.*)</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p14</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'Parsing command: rmvd</span><span class="se">\n</span><span class="s">'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p15</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'hdfs:</span><span class="err">\</span><span class="s">/</span><span class="err">\</span><span class="s">/.*</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p15</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'hdfs://</span><span class="se">\n</span><span class="s">'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p16</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'ALTER TABLE(.*)</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p16</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'ALTER TABLE removed </span><span class="se">\n</span><span class="s">'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p17</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'(dbname:.*?),'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p17</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'dbname:db,'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p18</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'(tablename:.*?),'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p18</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'tablename:tbl,'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p19</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'INSERT INTO TABLE(.*)</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p19</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'INSERT INTO TABLE rmvd</span><span class="se">\n</span><span class="s">'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p20</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'SHOW TABLES(.*)</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p20</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'SHOW TABLES rmvd</span><span class="se">\n</span><span class="s">'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p21</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'DDLTask: got data for(.*)</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p21</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'DDLTask: got data for rmvd</span><span class="se">\n</span><span class="s">'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p22</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'DDLTask: written data for(.*)</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p22</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'DDLTask: written data for rmvd</span><span class="se">\n</span><span class="s">'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p23</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'create_table_core(.*)</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p23</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'create_table_core rmvd</span><span class="se">\n</span><span class="s">'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p24</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'(</span><span class="err">\</span><span class="s">sTable</span><span class="err">\</span><span class="s">s*.*)</span><span class="err">\</span><span class="s">s*not found:</span><span class="err">\</span><span class="s">s*(.*).(.*)table not found</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p24</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'Table tbl not found db.tbl table not found</span><span class="se">\n</span><span class="s">'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="n">p25</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'CREATE(.*)</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">newline</span> <span class="o">=</span> <span class="n">p25</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">'CREATE removed</span><span class="se">\n</span><span class="s">'</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+   
+    <span class="k">return</span> <span class="n">newline</span>
+ 
+<span class="k">for</span> <span class="n">myfile</span> <span class="ow">in</span> <span class="n">coll_files</span><span class="p">(</span><span class="n">file_search</span><span class="p">):</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">myfile</span><span class="p">)</span>
+    <span class="n">fout</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">"parsed."</span> <span class="o">+</span> <span class="n">myfile</span><span class="p">,</span> <span class="s">'w'</span><span class="p">)</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+    <span class="k">while</span> <span class="n">line</span><span class="p">:</span>
+       <span class="n">matchObj</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2},\d{3}\s*INFO.*)CREATE'</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+       <span class="k">if</span> <span class="n">matchObj</span><span class="p">:</span>
+           <span class="n">write_to_file</span><span class="o">=</span><span class="bp">False</span>
+           <span class="n">skip_next_expression</span> <span class="o">=</span> <span class="bp">True</span>
+           <span class="s">'''
+       else:
+            print "No match!!"'''</span>
+       <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+      
+       <span class="k">if</span> <span class="n">skip_next_expression</span> <span class="o">!=</span> <span class="bp">True</span><span class="p">:</span>
+           <span class="c1">#print "do not skip
+</span>           <span class="s">''' Here we will actually start checking for the end of the SQL statement after the first line was skipped. '''</span>
+           <span class="n">matchObj2</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2},\d{3}\s*INFO.*)'</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+           <span class="k">if</span> <span class="n">matchObj2</span><span class="p">:</span>
+               <span class="n">write_to_file</span> <span class="o">=</span> <span class="bp">True</span>
+       <span class="k">else</span><span class="p">:</span>
+           <span class="n">skip_next_expression</span> <span class="o">=</span> <span class="bp">False</span>
+           <span class="c1">#print "skip"
+</span>          
+       <span class="k">if</span> <span class="n">write_to_file</span><span class="p">:</span>
+           <span class="n">fout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="n">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></code></pre></figure>
+
+  </div><a class="u-url" href="/hdp/hive/2019/07/25/Hive_log-parsing.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Thomas Kreutzer&#39;s Git Pages Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Thomas Kreutzer&#39;s Git Pages Blog</li><li><a class="u-email" href="mailto:thomaskreutzer@msn.com">thomaskreutzer@msn.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/thomaskreutzer"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">thomaskreutzer</span></a></li><li><a href="https://www.twitter.com/no-twitter"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">no-twitter</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it&#39;s good to have these items as a reference when I forget what I did a year from now on a project that one time. It&#39;s good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
