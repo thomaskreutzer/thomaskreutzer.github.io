@@ -1,4 +1,146 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-08-12T08:32:18-04:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">Hive log parsing</title><link href="http://localhost:4000/hdp/hive/2019/07/25/Hive_log-parsing.html" rel="alternate" type="text/html" title="Hive log parsing" /><published>2019-07-25T08:27:29-04:00</published><updated>2019-07-25T08:27:29-04:00</updated><id>http://localhost:4000/hdp/hive/2019/07/25/Hive_log%20parsing</id><content type="html" xml:base="http://localhost:4000/hdp/hive/2019/07/25/Hive_log-parsing.html">&lt;h3 id=&quot;description&quot;&gt;Description:&lt;/h3&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-08-12T09:38:38-04:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">Spark Recursive View</title><link href="http://localhost:4000/spark/2019/08/12/Spark-Recursive_view.html" rel="alternate" type="text/html" title="Spark Recursive View" /><published>2019-08-12T08:27:29-04:00</published><updated>2019-08-12T08:27:29-04:00</updated><id>http://localhost:4000/spark/2019/08/12/Spark-Recursive_view</id><content type="html" xml:base="http://localhost:4000/spark/2019/08/12/Spark-Recursive_view.html">&lt;h3 id=&quot;goal&quot;&gt;Goal:&lt;/h3&gt;
+
+&lt;p&gt;Hive does not have recursive views, Teradata conversions could run into issues in this area. Especially if you are working on the dreaded lift and shift projects. I found an article (https://www.pythian.com/blog/recursion-in-hive/) on methods to replicate recursive views using spark and I used this to load data into a table on ingest. This is a bit more complex of a case than existed in the original tutorial.&lt;/p&gt;
+
+&lt;h3 id=&quot;example&quot;&gt;Example:&lt;/h3&gt;
+&lt;p&gt;in this case we called scala code dynamically passing in an ID to query and create some recursive data.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;appName&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;some_name&quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;appID&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;__APPID__&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tgtDb&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;mytargetdb&quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;srcTable&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;mysourcetable&quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tgtTable&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;mytargettable&quot;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//SQL to get seed data
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df_list_seed&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;spark&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sql&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
+SELECT
+  *
+  ,0 AS cnt
+  ,ROW_NUMBER() OVER (PARTITION BY appid, col1, col2, col3, cole4, col5 ORDER BY col6) AS sequence
+FROM
+  $tgtDb.$srcTable
+WHERE appid = $appID
+&quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//Register the dataframe as a temp table to be used in the net step for iteration.
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df_list_seed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createOrReplaceTempView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;vt_seed0&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//Hold the value of the number of rows in the new dataset
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df_cnt&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//Iteration Counter
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cnt&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//Use the following while loop to generate a new data frame for each run.
+//We have generated a new data frame with a sequence. At each step, the previous data frame is used to retrieve a new resultset.
+//If the data frame does not have any rows, then the loop is terminated.
+//Same query from &quot;Iteration&quot; statement issues here too
+//Also only register a temporary table if the data frame has rows in it, hence the &quot;IF&quot; condition is present in WHILE loop.
+//Also note, col6 is the one we will use to build hierarchy information. 
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tblnm&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;vt_seed&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;concat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cnt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;),&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tblnm1&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;vt_seed&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;concat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cnt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df_list_rec&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;spark&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sql&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
+    SELECT
+      concat_ws(',', tb2.col6, tbl1.col6) AS col6
+      ,tbl1.sequence
+      ,tbl1.appid
+      ,tbl1.col1
+      ,tbl1.col2
+      ,tbl1.col3
+      ,tbl1.col4
+      ,tbl1.col5
+      ,$cnt AS cnt
+    FROM
+      vt_seed0 tb1
+      ,$tblnm  tb2
+    WHERE
+      tb2.sequence+1=tbl1.sequence
+      AND tb2.col1 = tbl1.col1
+      AND tb2.col2 = tbl1.col2
+      AND tb2.col3 = tbl1.col3
+      AND tb2.col4 = tbl1.col4
+      AND tb2.col5 = tbl1.col5
+  &quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;df_cnt&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df_list_rec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toInt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df_cnt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;df_list_rec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createOrReplaceTempView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;$tblnm1&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;cnt&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cnt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+
+&lt;span class=&quot;c1&quot;&gt;//UNION all of the tables together
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;union_query&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;&amp;lt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)){&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;union_query&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;union_query&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;concat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;SELECT col6, sequence, appid, col1, col2, col3, col4, col5, cnt FROM vt_seed&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;concat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;union_query&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;union_query&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;concat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;UNION SELECT col6, sequence, appid, col1, col2, col3, col4, col5, cnt FROM vt_seed&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;concat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+
+&lt;span class=&quot;c1&quot;&gt;//Create the dataframe with the SQL
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df_union&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;spark&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sql&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;$union_query&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;df_union&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createOrReplaceTempView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;vt_union&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;c1&quot;&gt;//Execute the analytical query to extract only the max iteration based on partition
+//We want only the max sequence from each set in the result
+&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;spark&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sql&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;set hive.exec.dynamic.partition.mode=nonstrict&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df_maxrecord&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;spark&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sql&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
+  SELECT
+    col1
+    ,col2
+    ,col3
+    ,col4
+    ,col5
+    ,col6
+    ,appid
+  FROM
+  (
+    SELECT
+      col1
+      ,col2
+      ,col3
+      ,col4
+      ,col5
+      ,col6
+      ,appid
+      ,MAX(sequence) over (PARTITION BY appid, col1, col2, col3, col4, col5) max_sequence
+    FROM
+    (
+      SELECT
+        col1
+        ,col2
+        ,col3
+        ,col4
+        ,col5
+        ,col6
+        ,appid
+        ,cnt
+        ,MAX(cnt) OVER (PARTITION BY sequence, appid, col1, col2, col3, col4, col5) max_cnt
+      FROM vt_union
+    )
+    WHERE
+      cnt = max_cnt
+  )
+  WHERE
+   sequence = max_sequence
+  DISTRIBUTE BY appid
+&quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;df_maxrecord&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createOrReplaceTempView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;vt_maxrecord)
+
+//Finally insert the result to your target table
+val df_materialize = spark.sql(s&quot;&quot;&quot;&lt;/span&gt;
+  &lt;span class=&quot;nc&quot;&gt;INSERT&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;OVERWRITE&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TABLE&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;$tgtDb&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tgtTable&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;PARTITION&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;appid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;nc&quot;&gt;SELECT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vt_maxrecord&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Goal:</summary></entry><entry><title type="html">Hive log parsing</title><link href="http://localhost:4000/hdp/hive/2019/07/25/Hive_log-parsing.html" rel="alternate" type="text/html" title="Hive log parsing" /><published>2019-07-25T08:27:29-04:00</published><updated>2019-07-25T08:27:29-04:00</updated><id>http://localhost:4000/hdp/hive/2019/07/25/Hive_log%20parsing</id><content type="html" xml:base="http://localhost:4000/hdp/hive/2019/07/25/Hive_log-parsing.html">&lt;h3 id=&quot;description&quot;&gt;Description:&lt;/h3&gt;
 &lt;p&gt;I work with clients that have not installed SmartSense and we need to upload logs for support cases. Data must be removed such as table names, IP addresses, kerberos realms, user names, database names.&lt;/p&gt;
 
 &lt;p&gt;This is a quick script, it would likely require tweaking to your requirements. This is by no means the most optimal method, but will get you by in a pinch and removes SQL queries from the log even if on multiple lines.&lt;/p&gt;
@@ -772,118 +914,4 @@ addent &lt;span class=&quot;nt&quot;&gt;-password&lt;/span&gt; service-account@R
 wkt service-account.keytab
 quit&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;That’s it, you know should have a keytab created in the directory you are in with the name service-account.keytab. Of course you should substitute this name and account with the proper name for you configuration.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Assumptions:</summary></entry><entry><title type="html">NiFi Two-Way TLS/SSL with Powershell and Windows</title><link href="http://localhost:4000/nifi/security/2019/05/24/NiFi-Two-Way-TLS-with-Powershell-and-Windows.html" rel="alternate" type="text/html" title="NiFi Two-Way TLS/SSL with Powershell and Windows" /><published>2019-05-24T15:57:29-04:00</published><updated>2019-05-24T15:57:29-04:00</updated><id>http://localhost:4000/nifi/security/2019/05/24/NiFi-Two-Way-TLS-with-Powershell-and-Windows</id><content type="html" xml:base="http://localhost:4000/nifi/security/2019/05/24/NiFi-Two-Way-TLS-with-Powershell-and-Windows.html">&lt;p&gt;Recently I worked on a project were a Windows platform needed to communicate to a Restful API hosted on NiFi. Part of the security requirements involved implementation of two-way or mutual TLS and the application running on windows was restricted to using Powershell. This blog article assumes you have basic knowledge with configurations for JAVA keystores, truststores and creation of certificates, they will not be covered in detail. I will cover how Powersehll was able to connect and send secured requests to our target application. It is assumed the client’s certificates have already been created.&lt;/p&gt;
-
-&lt;p&gt;In this example I was provided a keystore from the client server, from this I will export the required formats we will use for our configurations.&lt;/p&gt;
-
-&lt;h3 id=&quot;convert-jks-into-p12-and-crt&quot;&gt;Convert .JKS into .p12 and .crt:&lt;/h3&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;keytool &lt;span class=&quot;nt&quot;&gt;-importkeystore&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-srckeystore&lt;/span&gt; mykeystore.jks &lt;span class=&quot;nt&quot;&gt;-destkeystore&lt;/span&gt; client.p12 &lt;span class=&quot;nt&quot;&gt;-srcalias&lt;/span&gt; youralias -
-srcstoretype jks &lt;span class=&quot;nt&quot;&gt;-deststoretype&lt;/span&gt; pkcs12
-openssl pkcs12 &lt;span class=&quot;nt&quot;&gt;-in&lt;/span&gt; client.p12 &lt;span class=&quot;nt&quot;&gt;-out&lt;/span&gt; client.pem
-openssl x509 &lt;span class=&quot;nt&quot;&gt;-outform&lt;/span&gt; der &lt;span class=&quot;nt&quot;&gt;-in&lt;/span&gt; client.pem &lt;span class=&quot;nt&quot;&gt;-out&lt;/span&gt; client.crt&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;h3 id=&quot;import-the-p12-file-into-windows-certificate-store&quot;&gt;Import the .p12 file into windows certificate store.&lt;/h3&gt;
-&lt;p&gt;On your windows machine click search and type in cert
-Click on Manage user certificates&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/5fhbtrY.png&quot; alt=&quot;Certificate Manager&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;This opens up the certificate manager, click on &lt;strong&gt;Personal –&amp;gt; Certificates&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/A4OGXx9.png&quot; alt=&quot;Personal Certificate&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;With Certificates highlighted click on &lt;strong&gt;Action –&amp;gt; All Tasks –&amp;gt; Import..&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/JBi9bJr.png&quot; alt=&quot;All Tasks&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The next screen will have Current User defaulted, it cannot be changed as we are editing for current user. Just click &lt;strong&gt;Next&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/iquzNhZ.png&quot; alt=&quot;Certificate Import&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;On the next screen click browse, you will select your .p12 file that was created in the earlier steps. In order to do so you must also change the filter so that it shows files with the .p12 extension.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/LExId7X.png&quot; alt=&quot;Browse File&quot; /&gt;
-&lt;img src=&quot;https://i.imgur.com/VMEqOOv.png&quot; alt=&quot;iFile Format&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;With the proper &lt;strong&gt;.p12&lt;/strong&gt; file selected, click next.&lt;/p&gt;
-
-&lt;p&gt;![File Selected]https://i.imgur.com/m7VFJ8p.png)&lt;/p&gt;
-
-&lt;p&gt;On the following screen enter the password and click next.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/I2l3Y6t.png&quot; alt=&quot;Password&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;On the following screen accept the defaults by clicking next.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/3rpAouG.png&quot; alt=&quot;Accept Defaults&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Click finish on the last screen&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/vJkS9jd.png&quot; alt=&quot;Finish&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Your .p12 certificate is installed.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/tj0rZyA.png&quot; alt=&quot;p12 Installed&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;nifi-configuration&quot;&gt;NiFi Configuration:&lt;/h2&gt;
-&lt;p&gt;The NiFi configuration of the processor assumes you have a properly set up truststore with the certificate the client will be sending installed. We are using a StandardRestrictedSSLContextService defined as follows.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/WFinG4G.png&quot; alt=&quot;StandardRestrictedSSLContextService&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;We also use a StandardHTTPContextMap in NiFi with the following default configurations. 
-&lt;img src=&quot;https://i.imgur.com/4BzkVwd.png&quot; alt=&quot;StandardHTTPContextMap&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Finally we have the HandleHTTPRequest processor with a port that is not being used, in our case 9092 for this test. We configured our Rest Endpoint and finally we have selected Need Authentication which will required two-way SSL.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/ZikLem0.png&quot; alt=&quot;StandardHTTPContextMap&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;execution-of-powershell&quot;&gt;Execution of powershell:&lt;/h2&gt;
-&lt;p&gt;We have two different ways that we can execute the powershell command. The first method is to use the .crt file which would need to be deployed on the Windows machine. The first method is as follows.&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
-&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt;.Import&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;D:&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\p&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ath&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ls&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\c&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;lient.crt&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Net.ServicePointManager]::SecurityProtocol &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Net.SecurityProtocolType]::Tls12
-Invoke-WebRequest &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-UseBasicParsing&lt;/span&gt; https://yourhost:9092/endpoint/hbase &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-ContentType&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;application/json&quot;&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-Method&lt;/span&gt; POST &lt;span class=&quot;nt&quot;&gt;-Body&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;{'name':'Thomas','email':'none@gmail.com'}&quot;&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-Certificate&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;The second method is to use the thumbprint, first we will demo how to get the thumbprint in powershell.&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
-&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt;.Import&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;D:&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\p&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ath&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ls&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\c&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;lient.crt&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-Write-Output &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$cert&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/MIlrzYt.png&quot; alt=&quot;Thumbprint Display&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Using the thumbprint in your powershell command.&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Net.ServicePointManager]::SecurityProtocol &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Net.SecurityProtocolType]::Tls12
-Invoke-WebRequest &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-UseBasicParsing&lt;/span&gt; https://yourhost:9092/endpoint/hbase &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-ContentType&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;application/json&quot;&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-Method&lt;/span&gt; POST &lt;span class=&quot;nt&quot;&gt;-Body&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;{'name':'Thomas','email':'none@gmail.com'}&quot;&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-CertificateThumbprint&lt;/span&gt; 19XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;You can also get the thumbprint and pass it right from the cert.&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
-&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt;.Import&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;D:&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\p&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ath&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ls&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\c&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;lient.crt&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Net.ServicePointManager]::SecurityProtocol &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Net.SecurityProtocolType]::Tls12
-Invoke-WebRequest &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-UseBasicParsing&lt;/span&gt; https://yourhost:9092/endpoint/hbase &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-ContentType&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;application/json&quot;&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-Method&lt;/span&gt; POST &lt;span class=&quot;nt&quot;&gt;-Body&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;{'name':'Thomas','email':'none@gmail.com'}&quot;&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-CertificateThumbprint&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$Cert&lt;/span&gt;.thumbprint&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;All of the above methods will give you success.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/KzIzoBz.png&quot; alt=&quot;200 OK&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;You can also see the file has gone through NiFi.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/d3hNa6L.png&quot; alt=&quot;Nifi Success&quot; /&gt;&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Recently I worked on a project were a Windows platform needed to communicate to a Restful API hosted on NiFi. Part of the security requirements involved implementation of two-way or mutual TLS and the application running on windows was restricted to using Powershell. This blog article assumes you have basic knowledge with configurations for JAVA keystores, truststores and creation of certificates, they will not be covered in detail. I will cover how Powersehll was able to connect and send secured requests to our target application. It is assumed the client’s certificates have already been created.</summary></entry></feed>
+&lt;p&gt;That’s it, you know should have a keytab created in the directory you are in with the name service-account.keytab. Of course you should substitute this name and account with the proper name for you configuration.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Assumptions:</summary></entry></feed>
