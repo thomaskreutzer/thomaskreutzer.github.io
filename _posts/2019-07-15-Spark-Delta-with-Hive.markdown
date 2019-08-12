@@ -63,7 +63,7 @@ All parameters will be passed in at execution time to the application for execut
 * --executor-memory 2g
 * --queue yourqueue \
 * --class com.yourdomain.delta_scala.App \
-* /tmp/x003075/delta-scala-0.0.1-snapshot.jar \
+* /tmp/somepath/delta-scala-0.0.1-snapshot.jar \
 * spark_delta \  --Application name we are executing
 * someStageDb \  --Stage database
 * someTargetDb \ --Target Database
