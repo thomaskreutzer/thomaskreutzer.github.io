@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Calling Kerberized RESTful API from Spark with Scala | Thomas Kreutzer’s Git Pages Blog</title>
+<meta name="generator" content="Jekyll v3.8.5" />
+<meta property="og:title" content="Calling Kerberized RESTful API from Spark with Scala" />
+<meta name="author" content="Thomas Kreutzer" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Description: Recently I worked on a project where it was required to call restful API’s with a spark application. The endpoint that we needed to access was using Kerberos Authentication. To make this work properly I deployed a service keytab for the application ID that would be executing the process, in addition JAVA code was created to allow get and put operations to succeed with Kerberos. The after the jar was imported into the program kerberos calls worked perfeclty. This is probably not the cleanest implementation and it was completed in a pinch." />
+<meta property="og:description" content="Description: Recently I worked on a project where it was required to call restful API’s with a spark application. The endpoint that we needed to access was using Kerberos Authentication. To make this work properly I deployed a service keytab for the application ID that would be executing the process, in addition JAVA code was created to allow get and put operations to succeed with Kerberos. The after the jar was imported into the program kerberos calls worked perfeclty. This is probably not the cleanest implementation and it was completed in a pinch." />
+<link rel="canonical" href="http://localhost:4000/spark/2019/11/08/Calling-Kerberized-RESTful-API-From-Spark-with-Scala.html" />
+<meta property="og:url" content="http://localhost:4000/spark/2019/11/08/Calling-Kerberized-RESTful-API-From-Spark-with-Scala.html" />
+<meta property="og:site_name" content="Thomas Kreutzer’s Git Pages Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-11-08T03:45:29-05:00" />
+<script type="application/ld+json">
+{"url":"http://localhost:4000/spark/2019/11/08/Calling-Kerberized-RESTful-API-From-Spark-with-Scala.html","headline":"Calling Kerberized RESTful API from Spark with Scala","dateModified":"2019-11-08T03:45:29-05:00","datePublished":"2019-11-08T03:45:29-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/spark/2019/11/08/Calling-Kerberized-RESTful-API-From-Spark-with-Scala.html"},"author":{"@type":"Person","name":"Thomas Kreutzer"},"description":"Description: Recently I worked on a project where it was required to call restful API’s with a spark application. The endpoint that we needed to access was using Kerberos Authentication. To make this work properly I deployed a service keytab for the application ID that would be executing the process, in addition JAVA code was created to allow get and put operations to succeed with Kerberos. The after the jar was imported into the program kerberos calls worked perfeclty. This is probably not the cleanest implementation and it was completed in a pinch.","@type":"BlogPosting","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Thomas Kreutzer's Git Pages Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Thomas Kreutzer&#39;s Git Pages Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Calling Kerberized RESTful API from Spark with Scala</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2019-11-08T03:45:29-05:00" itemprop="datePublished">Nov 8, 2019
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Thomas Kreutzer</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h3 id="description">Description:</h3>
+<p>Recently I worked on a project where it was required to call restful API’s with a spark application. The endpoint that we needed to access was using Kerberos Authentication. To make this work properly I deployed a service keytab for the application ID that would be executing the process, in addition JAVA code was created to allow get and put operations to succeed with Kerberos. The after the jar was imported into the program kerberos calls worked perfeclty. This is probably not the cleanest implementation and it was completed in a pinch.</p>
+
+<p><strong>Java Code:</strong></p>
+
+<figure class="highlight"><pre><code class="language-java" data-lang="java"><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">yoursite</span><span class="o">.</span><span class="na">scala</span><span class="o">.</span><span class="na">rest</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.io.InputStream</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.security.Principal</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.security.PrivilegedAction</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.Arrays</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.HashMap</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.HashSet</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.Set</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">javax.security.auth.Subject</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">javax.security.auth.kerberos.KerberosPrincipal</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">javax.security.auth.login.AppConfigurationEntry</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">javax.security.auth.login.Configuration</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">javax.security.auth.login.LoginContext</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">org.apache.commons.io.IOUtils</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.HttpException</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.HttpResponse</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.StatusLine</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.auth.AuthSchemeProvider</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.auth.AuthScope</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.auth.Credentials</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.client.HttpClient</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.client.HttpResponseException</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.client.config.AuthSchemes</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.client.methods.HttpGet</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.client.methods.HttpPost</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.client.methods.HttpUriRequest</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.config.Lookup</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.config.RegistryBuilder</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.entity.StringEntity</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.impl.auth.SPNegoSchemeFactory</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.impl.client.BasicCredentialsProvider</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.impl.client.CloseableHttpClient</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.http.impl.client.HttpClientBuilder</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">KerberosHttpClient</span> <span class="o">{</span>
+	<span class="kd">private</span> <span class="n">String</span> <span class="n">principal</span><span class="o">;</span>
+	<span class="kd">private</span> <span class="n">String</span> <span class="n">keyTabLocation</span><span class="o">;</span>
+
+	<span class="kd">public</span> <span class="nf">KerberosHttpClient</span><span class="o">()</span> <span class="o">{</span>
+	<span class="o">}</span>
+
+	<span class="kd">public</span> <span class="nf">KerberosHttpClient</span><span class="o">(</span><span class="n">String</span> <span class="n">principal</span><span class="o">,</span> <span class="n">String</span> <span class="n">keyTabLocation</span><span class="o">)</span> <span class="o">{</span>
+		<span class="kd">super</span><span class="o">();</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">principal</span> <span class="o">=</span> <span class="n">principal</span><span class="o">;</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">keyTabLocation</span> <span class="o">=</span> <span class="n">keyTabLocation</span><span class="o">;</span>
+	<span class="o">}</span>
+
+	<span class="kd">public</span> <span class="nf">KerberosHttpClient</span><span class="o">(</span><span class="n">String</span> <span class="n">principal</span><span class="o">,</span> <span class="n">String</span> <span class="n">keyTabLocation</span><span class="o">,</span> <span class="n">String</span> <span class="n">krb5Location</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">this</span><span class="o">(</span><span class="n">principal</span><span class="o">,</span> <span class="n">keyTabLocation</span><span class="o">);</span>
+		<span class="n">System</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="s">"java.security.krb5.conf"</span><span class="o">,</span> <span class="n">krb5Location</span><span class="o">);</span>
+	<span class="o">}</span>
+
+	<span class="kd">public</span> <span class="nf">KerberosHttpClient</span><span class="o">(</span><span class="n">String</span> <span class="n">principal</span><span class="o">,</span> <span class="n">String</span> <span class="n">keyTabLocation</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">isDebug</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">this</span><span class="o">(</span><span class="n">principal</span><span class="o">,</span> <span class="n">keyTabLocation</span><span class="o">);</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">isDebug</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">System</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="s">"sun.security.spnego.debug"</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
+			<span class="n">System</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="s">"sun.security.krb5.debug"</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
+		<span class="o">}</span>
+	<span class="o">}</span>
+
+	<span class="kd">public</span> <span class="nf">KerberosHttpClient</span><span class="o">(</span><span class="n">String</span> <span class="n">principal</span><span class="o">,</span> <span class="n">String</span> <span class="n">keyTabLocation</span><span class="o">,</span> <span class="n">String</span> <span class="n">krb5Location</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">isDebug</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">this</span><span class="o">(</span><span class="n">principal</span><span class="o">,</span> <span class="n">keyTabLocation</span><span class="o">,</span> <span class="n">isDebug</span><span class="o">);</span>
+		<span class="n">System</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="s">"java.security.krb5.conf"</span><span class="o">,</span> <span class="n">krb5Location</span><span class="o">);</span>
+	<span class="o">}</span>
+
+	<span class="kd">private</span> <span class="kd">static</span> <span class="n">HttpClient</span> <span class="nf">buildSpengoHttpClient</span><span class="o">()</span> <span class="o">{</span>
+		<span class="n">HttpClientBuilder</span> <span class="n">builder</span> <span class="o">=</span> <span class="n">HttpClientBuilder</span><span class="o">.</span><span class="na">create</span><span class="o">();</span>
+		<span class="n">Lookup</span><span class="o">&lt;</span><span class="n">AuthSchemeProvider</span><span class="o">&gt;</span> <span class="n">authSchemeRegistry</span> <span class="o">=</span> <span class="n">RegistryBuilder</span><span class="o">.&lt;</span><span class="n">AuthSchemeProvider</span><span class="o">&gt;</span><span class="n">create</span><span class="o">()</span>
+				<span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="n">AuthSchemes</span><span class="o">.</span><span class="na">SPNEGO</span><span class="o">,</span> <span class="k">new</span> <span class="n">SPNegoSchemeFactory</span><span class="o">(</span><span class="kc">true</span><span class="o">)).</span><span class="na">build</span><span class="o">();</span>
+		<span class="n">builder</span><span class="o">.</span><span class="na">setDefaultAuthSchemeRegistry</span><span class="o">(</span><span class="n">authSchemeRegistry</span><span class="o">);</span>
+		<span class="n">BasicCredentialsProvider</span> <span class="n">credentialsProvider</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BasicCredentialsProvider</span><span class="o">();</span>
+		<span class="n">credentialsProvider</span><span class="o">.</span><span class="na">setCredentials</span><span class="o">(</span><span class="k">new</span> <span class="n">AuthScope</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">,</span> <span class="kc">null</span><span class="o">),</span> <span class="k">new</span> <span class="n">Credentials</span><span class="o">()</span> <span class="o">{</span>
+			<span class="nd">@Override</span>
+			<span class="kd">public</span> <span class="n">Principal</span> <span class="nf">getUserPrincipal</span><span class="o">()</span> <span class="o">{</span>
+				<span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+			<span class="o">}</span>
+
+			<span class="nd">@Override</span>
+			<span class="kd">public</span> <span class="n">String</span> <span class="nf">getPassword</span><span class="o">()</span> <span class="o">{</span>
+				<span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+			<span class="o">}</span>
+		<span class="o">});</span>
+		<span class="n">builder</span><span class="o">.</span><span class="na">setDefaultCredentialsProvider</span><span class="o">(</span><span class="n">credentialsProvider</span><span class="o">);</span>
+		<span class="n">CloseableHttpClient</span> <span class="n">httpClient</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="na">build</span><span class="o">();</span>
+		<span class="k">return</span> <span class="n">httpClient</span><span class="o">;</span>
+	<span class="o">}</span>
+	
+	<span class="kd">private</span> <span class="n">Subject</span> <span class="nf">getSubject</span><span class="o">(</span><span class="n">String</span> <span class="n">userId</span><span class="o">)</span> <span class="o">{</span>
+		<span class="n">Set</span><span class="o">&lt;</span><span class="n">Principal</span><span class="o">&gt;</span> <span class="n">princ</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;</span><span class="n">Principal</span><span class="o">&gt;(</span><span class="mi">1</span><span class="o">);</span>
+		<span class="n">princ</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">KerberosPrincipal</span><span class="o">(</span><span class="n">userId</span><span class="o">));</span>
+		<span class="n">Subject</span> <span class="n">sub</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Subject</span><span class="o">(</span><span class="kc">false</span><span class="o">,</span> <span class="n">princ</span><span class="o">,</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;</span><span class="n">Object</span><span class="o">&gt;(),</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;</span><span class="n">Object</span><span class="o">&gt;());</span>
+		<span class="k">return</span> <span class="n">sub</span><span class="o">;</span>
+	<span class="o">}</span>
+	
+	
+	<span class="kd">private</span> <span class="n">Configuration</span> <span class="nf">getConfig</span><span class="o">()</span> <span class="o">{</span>
+		<span class="n">Configuration</span> <span class="n">config</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Configuration</span><span class="o">()</span> <span class="o">{</span>
+			<span class="nd">@SuppressWarnings</span><span class="o">(</span><span class="s">"serial"</span><span class="o">)</span>
+			<span class="nd">@Override</span>
+			<span class="kd">public</span> <span class="n">AppConfigurationEntry</span><span class="o">[]</span> <span class="nf">getAppConfigurationEntry</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+				<span class="k">return</span> <span class="k">new</span> <span class="n">AppConfigurationEntry</span><span class="o">[]</span> <span class="o">{</span>
+						<span class="k">new</span> <span class="nf">AppConfigurationEntry</span><span class="o">(</span><span class="s">"com.sun.security.auth.module.Krb5LoginModule"</span><span class="o">,</span>
+								<span class="n">AppConfigurationEntry</span><span class="o">.</span><span class="na">LoginModuleControlFlag</span><span class="o">.</span><span class="na">REQUIRED</span><span class="o">,</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;()</span> <span class="o">{</span>
+									<span class="o">{</span>
+										<span class="n">put</span><span class="o">(</span><span class="s">"useTicketCache"</span><span class="o">,</span> <span class="s">"false"</span><span class="o">);</span>
+										<span class="n">put</span><span class="o">(</span><span class="s">"useKeyTab"</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
+										<span class="n">put</span><span class="o">(</span><span class="s">"keyTab"</span><span class="o">,</span> <span class="n">keyTabLocation</span><span class="o">);</span>
+										<span class="c1">// Krb5 in GSS API needs to be refreshed so it does not throw the error</span>
+										<span class="c1">// Specified version of key is not available</span>
+										<span class="n">put</span><span class="o">(</span><span class="s">"refreshKrb5Config"</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
+										<span class="n">put</span><span class="o">(</span><span class="s">"principal"</span><span class="o">,</span> <span class="n">principal</span><span class="o">);</span>
+										<span class="n">put</span><span class="o">(</span><span class="s">"storeKey"</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
+										<span class="n">put</span><span class="o">(</span><span class="s">"doNotPrompt"</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
+										<span class="n">put</span><span class="o">(</span><span class="s">"isInitiator"</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
+										<span class="n">put</span><span class="o">(</span><span class="s">"debug"</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
+									<span class="o">}</span>
+								<span class="o">})</span> <span class="o">};</span>
+			<span class="o">}</span>
+		<span class="o">};</span>
+		
+		<span class="k">return</span> <span class="n">config</span><span class="o">;</span>
+	<span class="o">}</span>
+
+	<span class="kd">private</span> <span class="n">HttpResponse</span> <span class="nf">httpResponseGet</span><span class="o">(</span><span class="kd">final</span> <span class="n">String</span> <span class="n">url</span><span class="o">)</span> <span class="o">{</span>
+		<span class="c1">// keyTabLocation = keyTabLocation.substring("file://".length());</span>
+		<span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"Calling KerberosHttpClient %s %s %s"</span><span class="o">,</span> <span class="k">this</span><span class="o">.</span><span class="na">principal</span><span class="o">,</span> <span class="k">this</span><span class="o">.</span><span class="na">keyTabLocation</span><span class="o">,</span> <span class="n">url</span><span class="o">));</span>
+		
+		<span class="n">Configuration</span> <span class="n">config</span> <span class="o">=</span> <span class="n">getConfig</span><span class="o">();</span>
+		<span class="n">Subject</span> <span class="n">sub</span><span class="o">=</span><span class="n">getSubject</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">principal</span><span class="o">);</span>
+		
+		<span class="k">try</span> <span class="o">{</span>
+			<span class="n">LoginContext</span> <span class="n">lc</span> <span class="o">=</span> <span class="k">new</span> <span class="n">LoginContext</span><span class="o">(</span><span class="s">""</span><span class="o">,</span> <span class="n">sub</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="n">config</span><span class="o">);</span>
+			<span class="n">lc</span><span class="o">.</span><span class="na">login</span><span class="o">();</span>
+			<span class="n">Subject</span> <span class="n">serviceSubject</span> <span class="o">=</span> <span class="n">lc</span><span class="o">.</span><span class="na">getSubject</span><span class="o">();</span>
+			<span class="k">return</span> <span class="n">Subject</span><span class="o">.</span><span class="na">doAs</span><span class="o">(</span><span class="n">serviceSubject</span><span class="o">,</span> <span class="k">new</span> <span class="n">PrivilegedAction</span><span class="o">&lt;</span><span class="n">HttpResponse</span><span class="o">&gt;()</span> <span class="o">{</span>
+				<span class="n">HttpResponse</span> <span class="n">httpResponse</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+				<span class="nd">@Override</span>
+				<span class="kd">public</span> <span class="n">HttpResponse</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+					<span class="k">try</span> <span class="o">{</span>
+						<span class="n">HttpUriRequest</span> <span class="n">request</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HttpGet</span><span class="o">(</span><span class="n">url</span><span class="o">);</span>
+						<span class="n">HttpClient</span> <span class="n">spnegoHttpClient</span> <span class="o">=</span> <span class="n">buildSpengoHttpClient</span><span class="o">();</span>
+						<span class="n">httpResponse</span> <span class="o">=</span> <span class="n">spnegoHttpClient</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">request</span><span class="o">);</span>
+						<span class="k">return</span> <span class="n">httpResponse</span><span class="o">;</span>
+					<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="n">ioe</span><span class="o">)</span> <span class="o">{</span>
+						<span class="n">ioe</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+					<span class="o">}</span>
+					<span class="k">return</span> <span class="n">httpResponse</span><span class="o">;</span>
+				<span class="o">}</span>
+			<span class="o">});</span>
+		<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">le</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">le</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+			<span class="o">;</span>
+		<span class="o">}</span>
+		<span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+	<span class="o">}</span>
+	
+	<span class="kd">private</span> <span class="n">HttpResponse</span> <span class="nf">httpResponsePost</span><span class="o">(</span><span class="kd">final</span> <span class="n">String</span> <span class="n">url</span><span class="o">,</span> <span class="n">String</span> <span class="n">json</span><span class="o">)</span> <span class="o">{</span>
+		<span class="c1">// keyTabLocation = keyTabLocation.substring("file://".length());</span>
+		<span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"Calling KerberosHttpClient %s %s %s"</span><span class="o">,</span> <span class="k">this</span><span class="o">.</span><span class="na">principal</span><span class="o">,</span> <span class="k">this</span><span class="o">.</span><span class="na">keyTabLocation</span><span class="o">,</span> <span class="n">url</span><span class="o">));</span>
+		
+		<span class="n">Configuration</span> <span class="n">config</span> <span class="o">=</span> <span class="n">getConfig</span><span class="o">();</span>
+		<span class="n">Subject</span> <span class="n">sub</span><span class="o">=</span><span class="n">getSubject</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">principal</span><span class="o">);</span>
+		
+		<span class="k">try</span> <span class="o">{</span>
+			<span class="n">LoginContext</span> <span class="n">lc</span> <span class="o">=</span> <span class="k">new</span> <span class="n">LoginContext</span><span class="o">(</span><span class="s">""</span><span class="o">,</span> <span class="n">sub</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="n">config</span><span class="o">);</span>
+			<span class="n">lc</span><span class="o">.</span><span class="na">login</span><span class="o">();</span>
+			<span class="n">Subject</span> <span class="n">serviceSubject</span> <span class="o">=</span> <span class="n">lc</span><span class="o">.</span><span class="na">getSubject</span><span class="o">();</span>
+			<span class="k">return</span> <span class="n">Subject</span><span class="o">.</span><span class="na">doAs</span><span class="o">(</span><span class="n">serviceSubject</span><span class="o">,</span> <span class="k">new</span> <span class="n">PrivilegedAction</span><span class="o">&lt;</span><span class="n">HttpResponse</span><span class="o">&gt;()</span> <span class="o">{</span>
+				<span class="n">HttpResponse</span> <span class="n">httpResponse</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+				<span class="nd">@Override</span>
+				<span class="kd">public</span> <span class="n">HttpResponse</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+					<span class="k">try</span> <span class="o">{</span>
+						<span class="n">HttpPost</span> <span class="n">request</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HttpPost</span><span class="o">(</span><span class="n">url</span><span class="o">);</span>
+						
+						<span class="n">StringEntity</span> <span class="n">entity</span> <span class="o">=</span> <span class="k">new</span> <span class="n">StringEntity</span><span class="o">(</span><span class="n">json</span><span class="o">);</span>
+						<span class="n">request</span><span class="o">.</span><span class="na">setEntity</span><span class="o">(</span><span class="n">entity</span><span class="o">);</span>
+						<span class="n">request</span><span class="o">.</span><span class="na">setHeader</span><span class="o">(</span><span class="s">"Accept"</span><span class="o">,</span> <span class="s">"application/json"</span><span class="o">);</span>
+						<span class="n">request</span><span class="o">.</span><span class="na">setHeader</span><span class="o">(</span><span class="s">"Content-type"</span><span class="o">,</span> <span class="s">"application/json"</span><span class="o">);</span>
+						<span class="n">HttpClient</span> <span class="n">spnegoHttpClient</span> <span class="o">=</span> <span class="n">buildSpengoHttpClient</span><span class="o">();</span>
+						<span class="n">httpResponse</span> <span class="o">=</span> <span class="n">spnegoHttpClient</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">request</span><span class="o">);</span>
+						<span class="k">return</span> <span class="n">httpResponse</span><span class="o">;</span>
+					<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="n">ioe</span><span class="o">)</span> <span class="o">{</span>
+						<span class="n">ioe</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+					<span class="o">}</span>
+					<span class="k">return</span> <span class="n">httpResponse</span><span class="o">;</span>
+				<span class="o">}</span>
+			<span class="o">});</span>
+		<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">le</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">le</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+			<span class="o">;</span>
+		<span class="o">}</span>
+		<span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+	<span class="o">}</span>
+	
+	
+	<span class="kd">public</span> <span class="n">String</span> <span class="nf">getUrl</span><span class="o">(</span><span class="n">String</span> <span class="n">principal</span><span class="o">,</span> <span class="n">String</span> <span class="n">keytab</span><span class="o">,</span> <span class="n">String</span> <span class="n">url</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">UnsupportedOperationException</span><span class="o">,</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">HttpException</span><span class="o">{</span>
+		<span class="n">String</span> <span class="n">c</span> <span class="o">=</span> <span class="s">""</span><span class="o">;</span>
+		<span class="n">KerberosHttpClient</span> <span class="n">restTest</span> <span class="o">=</span> <span class="k">new</span> <span class="n">KerberosHttpClient</span><span class="o">(</span><span class="n">principal</span><span class="o">,</span><span class="n">keytab</span><span class="o">,</span><span class="kc">true</span><span class="o">);</span>
+		<span class="n">HttpResponse</span> <span class="n">response</span> <span class="o">=</span> <span class="n">restTest</span><span class="o">.</span><span class="na">httpResponseGet</span><span class="o">(</span><span class="n">url</span><span class="o">);</span>
+		<span class="n">InputStream</span> <span class="n">is</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="na">getEntity</span><span class="o">().</span><span class="na">getContent</span><span class="o">();</span>
+		<span class="n">StatusLine</span> <span class="n">statusLine</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="na">getStatusLine</span><span class="o">();</span>
+		<span class="k">if</span><span class="o">(</span><span class="n">statusLine</span><span class="o">.</span><span class="na">getStatusCode</span><span class="o">()</span> <span class="o">==</span> <span class="mi">200</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">c</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">IOUtils</span><span class="o">.</span><span class="na">toByteArray</span><span class="o">(</span><span class="n">is</span><span class="o">),</span> <span class="s">"UTF-8"</span><span class="o">);</span>
+		<span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+			<span class="k">throw</span> <span class="k">new</span> <span class="nf">HttpResponseException</span><span class="o">(</span><span class="n">statusLine</span><span class="o">.</span><span class="na">getStatusCode</span><span class="o">(),</span> <span class="n">statusLine</span><span class="o">.</span><span class="na">getReasonPhrase</span><span class="o">());</span>
+		<span class="o">}</span>
+		
+		<span class="k">return</span> <span class="n">c</span><span class="o">;</span>
+	<span class="o">}</span>
+	
+	<span class="kd">public</span> <span class="n">String</span> <span class="nf">postUrl</span><span class="o">(</span><span class="n">String</span> <span class="n">principal</span><span class="o">,</span> <span class="n">String</span> <span class="n">keytab</span><span class="o">,</span> <span class="n">String</span> <span class="n">url</span><span class="o">,</span> <span class="n">String</span> <span class="n">json</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">UnsupportedOperationException</span><span class="o">,</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">HttpException</span><span class="o">{</span>
+		<span class="n">String</span> <span class="n">c</span> <span class="o">=</span> <span class="s">""</span><span class="o">;</span>
+		<span class="n">KerberosHttpClient</span> <span class="n">restTest</span> <span class="o">=</span> <span class="k">new</span> <span class="n">KerberosHttpClient</span><span class="o">(</span><span class="n">principal</span><span class="o">,</span><span class="n">keytab</span><span class="o">,</span><span class="kc">true</span><span class="o">);</span>
+		<span class="n">HttpResponse</span> <span class="n">response</span> <span class="o">=</span> <span class="n">restTest</span><span class="o">.</span><span class="na">httpResponsePost</span><span class="o">(</span><span class="n">url</span><span class="o">,</span> <span class="n">json</span><span class="o">);</span>
+		<span class="n">InputStream</span> <span class="n">is</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="na">getEntity</span><span class="o">().</span><span class="na">getContent</span><span class="o">();</span>
+		<span class="n">StatusLine</span> <span class="n">statusLine</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="na">getStatusLine</span><span class="o">();</span>
+		<span class="k">if</span><span class="o">(</span><span class="n">statusLine</span><span class="o">.</span><span class="na">getStatusCode</span><span class="o">()</span> <span class="o">==</span> <span class="mi">201</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">c</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">IOUtils</span><span class="o">.</span><span class="na">toByteArray</span><span class="o">(</span><span class="n">is</span><span class="o">),</span> <span class="s">"UTF-8"</span><span class="o">);</span>
+		<span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+			<span class="k">throw</span> <span class="k">new</span> <span class="nf">HttpResponseException</span><span class="o">(</span><span class="n">statusLine</span><span class="o">.</span><span class="na">getStatusCode</span><span class="o">(),</span> <span class="n">statusLine</span><span class="o">.</span><span class="na">getReasonPhrase</span><span class="o">());</span>
+		<span class="o">}</span>
+		
+		<span class="k">return</span> <span class="n">c</span><span class="o">;</span>
+	<span class="o">}</span>
+<span class="o">}</span></code></pre></figure>
+
+<p><strong>pom.xml</strong></p>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><span class="nt">&lt;project</span> <span class="na">xmlns=</span><span class="s">"http://maven.apache.org/POM/4.0.0"</span>
+	<span class="na">xmlns:xsi=</span><span class="s">"http://www.w3.org/2001/XMLSchema-instance"</span>
+	<span class="na">xsi:schemaLocation=</span><span class="s">"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"</span><span class="nt">&gt;</span>
+	<span class="nt">&lt;modelVersion&gt;</span>4.0.0<span class="nt">&lt;/modelVersion&gt;</span>
+	<span class="nt">&lt;groupId&gt;</span>com.yoursite.kerberos<span class="nt">&lt;/groupId&gt;</span>
+	<span class="nt">&lt;artifactId&gt;</span>Kerberos<span class="nt">&lt;/artifactId&gt;</span>
+	<span class="nt">&lt;version&gt;</span>0.0.1-SNAPSHOT<span class="nt">&lt;/version&gt;</span>
+
+
+
+	<span class="nt">&lt;dependencies&gt;</span>
+		<span class="c">&lt;!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient --&gt;</span>
+		<span class="nt">&lt;dependency&gt;</span>
+			<span class="nt">&lt;groupId&gt;</span>org.apache.httpcomponents<span class="nt">&lt;/groupId&gt;</span>
+			<span class="nt">&lt;artifactId&gt;</span>httpclient<span class="nt">&lt;/artifactId&gt;</span>
+			<span class="nt">&lt;version&gt;</span>4.5.10<span class="nt">&lt;/version&gt;</span>
+		<span class="nt">&lt;/dependency&gt;</span>
+
+		<span class="c">&lt;!-- https://mvnrepository.com/artifact/commons-io/commons-io --&gt;</span>
+		<span class="nt">&lt;dependency&gt;</span>
+			<span class="nt">&lt;groupId&gt;</span>commons-io<span class="nt">&lt;/groupId&gt;</span>
+			<span class="nt">&lt;artifactId&gt;</span>commons-io<span class="nt">&lt;/artifactId&gt;</span>
+			<span class="nt">&lt;version&gt;</span>2.6<span class="nt">&lt;/version&gt;</span>
+		<span class="nt">&lt;/dependency&gt;</span>
+
+	<span class="nt">&lt;/dependencies&gt;</span>
+
+	<span class="nt">&lt;build&gt;</span>
+		<span class="nt">&lt;plugins&gt;</span>
+			<span class="nt">&lt;plugin&gt;</span>
+				<span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
+				<span class="nt">&lt;artifactId&gt;</span>maven-assembly-plugin<span class="nt">&lt;/artifactId&gt;</span>
+				<span class="nt">&lt;version&gt;</span>3.1.1<span class="nt">&lt;/version&gt;</span>
+				<span class="nt">&lt;configuration&gt;</span>
+					<span class="nt">&lt;descriptorRefs&gt;</span>
+						<span class="nt">&lt;descriptorRef&gt;</span>jar-with-dependencies<span class="nt">&lt;/descriptorRef&gt;</span>
+					<span class="nt">&lt;/descriptorRefs&gt;</span>
+
+				<span class="nt">&lt;/configuration&gt;</span>
+				<span class="nt">&lt;executions&gt;</span>
+					<span class="nt">&lt;execution&gt;</span>
+						<span class="nt">&lt;id&gt;</span>assemble-all<span class="nt">&lt;/id&gt;</span>
+						<span class="nt">&lt;phase&gt;</span>package<span class="nt">&lt;/phase&gt;</span>
+						<span class="nt">&lt;goals&gt;</span>
+							<span class="nt">&lt;goal&gt;</span>single<span class="nt">&lt;/goal&gt;</span>
+						<span class="nt">&lt;/goals&gt;</span>
+					<span class="nt">&lt;/execution&gt;</span>
+				<span class="nt">&lt;/executions&gt;</span>
+			<span class="nt">&lt;/plugin&gt;</span>
+
+			<span class="nt">&lt;plugin&gt;</span>
+				<span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
+				<span class="nt">&lt;artifactId&gt;</span>maven-compiler-plugin<span class="nt">&lt;/artifactId&gt;</span>
+				<span class="nt">&lt;version&gt;</span>3.6.1<span class="nt">&lt;/version&gt;</span>
+				<span class="nt">&lt;configuration&gt;</span>
+					<span class="nt">&lt;source&gt;</span>1.8<span class="nt">&lt;/source&gt;</span>
+					<span class="nt">&lt;target&gt;</span>1.8<span class="nt">&lt;/target&gt;</span>
+				<span class="nt">&lt;/configuration&gt;</span>
+			<span class="nt">&lt;/plugin&gt;</span>
+		<span class="nt">&lt;/plugins&gt;</span>
+	<span class="nt">&lt;/build&gt;</span>
+<span class="nt">&lt;/project&gt;</span></code></pre></figure>
+
+<p>Next you need to execute some scala code for this to work. In this example we will execute it from spark-shell.</p>
+
+<p><strong>Start spark-shell including the required jar file.</strong></p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">spark-shell <span class="nt">--deploy-mode</span> client <span class="se">\</span>
+<span class="nt">--jars</span> file:///opt/Kerberos-0.0.1-SNAPSHOT-jar-with-dependencies.jar <span class="se">\</span>
+<span class="nt">--executor-memory</span> 5G <span class="nt">--executor-cores</span> 4 <span class="nt">--num-executors</span> 12</code></pre></figure>
+
+<p><strong>NOTE:</strong> We were pushing data to the HWX Registry server providing schema evolution information. 
+The payload was properly formatted JSON.</p>
+
+<figure class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">com.yoursite.scala.rest.KerberosHttpClient</span>
+
+<span class="k">val</span> <span class="n">princ</span> <span class="k">=</span> <span class="s">"service@YOUR.REALM"</span>
+<span class="k">val</span> <span class="n">keytab_loc</span> <span class="k">=</span> <span class="s">"/etc/security/keytabs/service.keytab"</span>
+<span class="k">val</span> <span class="n">registry_host</span><span class="o">=</span><span class="s">"http://your-registry-host:7788"</span>
+
+
+
+  <span class="k">def</span> <span class="n">create_registry_group</span><span class="o">(</span><span class="n">data_type</span><span class="k">:</span><span class="kt">String</span><span class="o">,</span> <span class="n">grp_nm</span><span class="k">:</span><span class="kt">String</span><span class="o">,</span> <span class="n">name</span><span class="k">:</span><span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">payload</span> <span class="k">=</span> <span class="nc">StringBuilder</span><span class="o">.</span><span class="n">newBuilder</span>
+    <span class="n">payload</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="s">"{"</span> <span class="o">)</span>
+    <span class="n">payload</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="s">"\"type\":\"%s\","</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">data_type</span><span class="o">)</span> <span class="o">)</span>
+    <span class="n">payload</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="s">"\"schemaGroup\":\"%s\","</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">grp_nm</span><span class="o">)</span> <span class="o">)</span>
+    <span class="n">payload</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="s">"\"name\":\"%s\","</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">name</span><span class="o">)</span> <span class="o">)</span>
+    <span class="n">payload</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="s">"\"description\":\"Schemas for %s group\","</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">grp_nm</span><span class="o">)</span> <span class="o">)</span>
+    <span class="n">payload</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="s">"\"compatibility\":\"BACKWARD\","</span> <span class="o">)</span>
+    <span class="n">payload</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="s">"\"validationLevel\":\"LATEST\","</span> <span class="o">)</span>
+    <span class="n">payload</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="s">"\"evolve\":\"true\""</span> <span class="o">)</span>
+    <span class="n">payload</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="s">"}"</span> <span class="o">)</span>
+    <span class="k">val</span> <span class="n">krb</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">KerberosHttpClient</span><span class="o">()</span>
+    <span class="k">try</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">r</span> <span class="k">=</span> <span class="n">krb</span><span class="o">.</span><span class="n">postUrl</span><span class="o">(</span> <span class="n">princ</span><span class="o">,</span><span class="n">keytab_loc</span><span class="o">,</span><span class="s">"%s/api/v1/schemaregistry/schemas"</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">registry_host</span><span class="o">),</span> <span class="n">payload</span><span class="o">.</span><span class="n">toString</span><span class="o">()</span> <span class="o">)</span>
+      <span class="k">return</span> <span class="n">r</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="n">e</span><span class="k">:</span> <span class="kt">org.apache.http.client.HttpResponseException</span> <span class="o">=&gt;</span> <span class="k">return</span> <span class="kc">null</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">get_latest_schema</span><span class="o">(</span><span class="n">name</span><span class="k">:</span><span class="kt">String</span><span class="o">)</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">krb</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">KerberosHttpClient</span><span class="o">()</span>
+    <span class="k">try</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">r</span> <span class="k">=</span> <span class="n">krb</span><span class="o">.</span><span class="n">getUrl</span><span class="o">(</span><span class="n">princ</span><span class="o">,</span><span class="n">keytab_loc</span><span class="o">,</span><span class="s">"%s/api/v1/schemaregistry/schemas/%s/versions/latest"</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">registry_host</span><span class="o">,</span><span class="n">name</span><span class="o">))</span>
+      <span class="k">return</span> <span class="n">r</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="n">e</span><span class="k">:</span> <span class="kt">org.apache.http.client.HttpResponseException</span> <span class="o">=&gt;</span> <span class="k">return</span> <span class="kc">null</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">register_new_schema</span><span class="o">(</span><span class="n">name</span><span class="k">:</span><span class="kt">String</span><span class="o">,</span> <span class="n">escaped_avro_schema</span><span class="k">:</span><span class="kt">String</span><span class="o">)</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">payload</span> <span class="k">=</span> <span class="nc">StringBuilder</span><span class="o">.</span><span class="n">newBuilder</span>
+    <span class="n">payload</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="s">"{"</span> <span class="o">)</span>
+    <span class="n">payload</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="s">"\"description\":\"Schema for %s\","</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">name</span><span class="o">)</span> <span class="o">)</span>
+    <span class="n">payload</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="s">"\"schemaText\":\"%s\""</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">escaped_avro_schema</span><span class="o">)</span> <span class="o">)</span>
+    <span class="n">payload</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="s">"}"</span> <span class="o">)</span>
+    <span class="k">val</span> <span class="n">krb</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">KerberosHttpClient</span><span class="o">()</span>
+    <span class="k">val</span> <span class="n">url</span> <span class="k">=</span> <span class="s">"%s/api/v1/schemaregistry/schemas/%s/versions?branch=MASTER"</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">registry_host</span><span class="o">,</span> <span class="n">name</span><span class="o">)</span>
+    <span class="n">println</span><span class="o">(</span><span class="n">url</span><span class="o">)</span>
+    <span class="k">try</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">r</span> <span class="k">=</span> <span class="n">krb</span><span class="o">.</span><span class="n">postUrl</span><span class="o">(</span> <span class="n">princ</span><span class="o">,</span><span class="n">keytab_loc</span><span class="o">,</span><span class="n">url</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">registry_host</span><span class="o">,</span> <span class="n">name</span><span class="o">),</span> <span class="n">payload</span><span class="o">.</span><span class="n">toString</span><span class="o">()</span> <span class="o">)</span>
+      <span class="k">return</span> <span class="n">r</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="n">e</span><span class="k">:</span> <span class="kt">org.apache.http.client.HttpResponseException</span> <span class="o">=&gt;</span> <span class="k">return</span> <span class="kc">null</span>
+    <span class="o">}</span>
+  <span class="o">}</span></code></pre></figure>
+
+  </div><a class="u-url" href="/spark/2019/11/08/Calling-Kerberized-RESTful-API-From-Spark-with-Scala.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Thomas Kreutzer&#39;s Git Pages Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Thomas Kreutzer&#39;s Git Pages Blog</li><li><a class="u-email" href="mailto:thomaskreutzer@msn.com">thomaskreutzer@msn.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/thomaskreutzer"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">thomaskreutzer</span></a></li><li><a href="https://www.twitter.com/no-twitter"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">no-twitter</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it&#39;s good to have these items as a reference when I forget what I did a year from now on a project that one time. It&#39;s good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
