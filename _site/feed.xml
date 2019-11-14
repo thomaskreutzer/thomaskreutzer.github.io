@@ -1,4 +1,38 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-11-14T07:30:58-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">Network Tests</title><link href="http://localhost:4000/network/2019/11/14/Network-Tests.html" rel="alternate" type="text/html" title="Network Tests" /><published>2019-11-14T06:20:29-05:00</published><updated>2019-11-14T06:20:29-05:00</updated><id>http://localhost:4000/network/2019/11/14/Network-Tests</id><content type="html" xml:base="http://localhost:4000/network/2019/11/14/Network-Tests.html">&lt;h3 id=&quot;description&quot;&gt;Description:&lt;/h3&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-11-14T08:34:18-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">Spark Hive Warehouse Connector with Analytical Queries</title><link href="http://localhost:4000/spark/2019/11/14/Spark-Hive-Warehouse-Connector-with-Analytical-Queries.html" rel="alternate" type="text/html" title="Spark Hive Warehouse Connector with Analytical Queries" /><published>2019-11-14T07:27:29-05:00</published><updated>2019-11-14T07:27:29-05:00</updated><id>http://localhost:4000/spark/2019/11/14/Spark-Hive-Warehouse-Connector-with-Analytical-Queries</id><content type="html" xml:base="http://localhost:4000/spark/2019/11/14/Spark-Hive-Warehouse-Connector-with-Analytical-Queries.html">&lt;h3 id=&quot;issue&quot;&gt;Issue:&lt;/h3&gt;
+&lt;p&gt;The hive warehouse connector is very useful to provide Spark with access to hive transactional ACID tables. However, in the current version I was using it did not work with analytical queries unless a specific parameter was added.&lt;/p&gt;
+
+&lt;h3 id=&quot;resolution&quot;&gt;Resolution:&lt;/h3&gt;
+&lt;p&gt;Under &lt;strong&gt;Custom hiveserver2-interactive-site&lt;/strong&gt; add the following property
+&lt;strong&gt;hive.llap.external.splits.order.by.force.single.split&lt;/strong&gt;=false&lt;/p&gt;
+
+&lt;p&gt;Now your queries will proeprly execute.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hiveData&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hive&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;executeQuery&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
+     |   SELECT DISTINCT
+     |     trip_number
+     |     , medallion
+     |     , pickup_datetime
+     |     , dropoff_datetime
+     |   FROM (
+     |     SELECT
+     |       trip_number
+     |       ,medallion
+     |       ,pickup_datetime
+     |       ,dropoff_datetime
+     |       ,lead(pickup_datetime) OVER(PARTITION BY medallion ORDER BY pickup_datetime ASC) AS pickup_datetime_lead
+     |       ,lead(dropoff_datetime) OVER(PARTITION BY medallion ORDER BY dropoff_datetime ASC) AS dropoff_datetime_lead
+     |     FROM trip
+     |     ORDER BY pickup_datetime ASC
+     |   ) X
+     |   WHERE
+     |     pickup_datetime_lead NOT BETWEEN pickup_datetime AND dropoff_datetime
+     |     AND dropoff_datetime_lead NOT BETWEEN pickup_datetime AND dropoff_datetime
+     | &quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;hiveData&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;org.apache.spark.sql.Dataset&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;org.apache.spark.sql.Row&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;trip_number:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;, &lt;span class=&quot;kt&quot;&gt;medallion:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;more&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;fields&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+ 
+&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hiveData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;res0&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Long&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;6149497&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Issue: The hive warehouse connector is very useful to provide Spark with access to hive transactional ACID tables. However, in the current version I was using it did not work with analytical queries unless a specific parameter was added.</summary></entry><entry><title type="html">Network Tests</title><link href="http://localhost:4000/network/2019/11/14/Network-Tests.html" rel="alternate" type="text/html" title="Network Tests" /><published>2019-11-14T06:20:29-05:00</published><updated>2019-11-14T06:20:29-05:00</updated><id>http://localhost:4000/network/2019/11/14/Network-Tests</id><content type="html" xml:base="http://localhost:4000/network/2019/11/14/Network-Tests.html">&lt;h3 id=&quot;description&quot;&gt;Description:&lt;/h3&gt;
 &lt;p&gt;Every once in a while you will run into an issue and the support team is going to ask for a set of network tests. Due dilligence is required because network problems can compound very quickly. Here is a quick script you can run to create some logs for testing.&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/bash&lt;/span&gt;
@@ -1079,121 +1113,4 @@ Under &lt;strong&gt;network.negotiate-auth.delegation-uris&lt;/strong&gt; and &l
 
 &lt;p&gt;&lt;img src=&quot;https://i.imgur.com/yN1qKZM.png&quot; alt=&quot;about:config&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;After this we had successfully configured firefox for Kerberos.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Configuration:</summary></entry><entry><title type="html">Hive Phoenix Storage Handler on HDP</title><link href="http://localhost:4000/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP.html" rel="alternate" type="text/html" title="Hive Phoenix Storage Handler on HDP" /><published>2019-06-09T05:27:29-04:00</published><updated>2019-06-09T05:27:29-04:00</updated><id>http://localhost:4000/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP</id><content type="html" xml:base="http://localhost:4000/hdp/hive/2019/06/09/Hive-Phoenix-Storage-Handler-HDP.html">&lt;h3 id=&quot;use-case&quot;&gt;Use Case:&lt;/h3&gt;
-
-&lt;p&gt;Recently when working on an application with a client we had a need to have fast interactions with small amounts of data but it needed to be available immediately to Hive. The synchronization was critical for another batch process that was decoupled from the interactions of the application. Yes, we could have probably handled this many ways but in the end I wanted to see if we could have the required inserts handled via the web application running on these windows servers. In a prior blog entry I talk about TLS with PowerShell which led into some of these tests.&lt;/p&gt;
-
-&lt;h3 id=&quot;hdp-configuration&quot;&gt;HDP Configuration&lt;/h3&gt;
-
-&lt;p&gt;In the Ambari UI we go to the &lt;strong&gt;Hive config&lt;/strong&gt; tab for the following and entered &lt;strong&gt;/usr/hdp/current/phoenix-client/phoenix-hive.jar&lt;/strong&gt; in the &lt;strong&gt;hive_env.sh&lt;/strong&gt; in two places. &lt;strong&gt;NOTE:&lt;/strong&gt; these are comma separated values and the first value &lt;strong&gt;hive-hcatalog&lt;/strong&gt; existed prior..&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/SLkCzDA.png&quot; alt=&quot;hive_env.sh&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;This will open up a new panel for &lt;strong&gt;NiFi Flow Configuration&lt;/strong&gt; and click on &lt;strong&gt;CONTROLLER SERVICES&lt;/strong&gt;, this will display all the controller services defined at this level. &lt;strong&gt;NOTE:&lt;/strong&gt; this is currently being done at the root canvas &lt;strong&gt;Nifi Flow&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;p&gt;I also added the custom hive site property for both Hive 1.x and LLAP:&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;hive.aux.jars.path=file://usr/hdp/current/phoenix-client/phoenix-hive.jar&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/q1feDJa.png&quot; alt=&quot;Hive 1.2&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/DMJOplz.png&quot; alt=&quot;Hive 2.x&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;After completing I restarted all hive services required and attempted the following query which failed.&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sql&quot; data-lang=&quot;sql&quot;&gt;&lt;span class=&quot;k&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;table&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;yourhivedb&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;phoenix_table&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;s1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;i1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;f1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;float&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;d1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;double&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;STORED&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BY&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'org.apache.phoenix.hive.PhoenixStorageHandler'&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;TBLPROPERTIES&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.table.name&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;{yourphoenixdb}.phoenix_table&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.zookeeper.quorum&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;{removed}.com,{removed}.com,{removed}.com&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.zookeeper.znode.parent&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;/hbase&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.zookeeper.client.port&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;2181&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.rowkeys&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;s1, i1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.column.mapping&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;s1:s1, i1:i1, f1:f1, d1:d1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.table.options&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;SALT_BUCKETS=10, DATA_BLOCK_ENCODING='DIFF'&quot;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;The error as follows:&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-none&quot; data-lang=&quot;none&quot;&gt;Error: Error while processing statement: 
-FAILED: Execution Error, return code 1 from org.apache.hadoop.hive.ql.exec.DDLTask. MetaException(message:org.apache.hadoop.hbase.client.RetriesExhaustedException: Can't get the location for replica 0)
-(state=08S01,code=1)&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;Upon researching, this is a znode issue. This should have been obvious as Kerberos is enabled. It is set as &lt;strong&gt;/habse&lt;/strong&gt; and should be &lt;strong&gt;/hbase-secure&lt;/strong&gt; 
-Modified Query:&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sql&quot; data-lang=&quot;sql&quot;&gt;&lt;span class=&quot;k&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TABLE&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;yourhivedb&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;phoenix_table&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;s1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;i1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;f1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;float&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;d1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;double&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;STORED&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BY&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'org.apache.phoenix.hive.PhoenixStorageHandler'&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;TBLPROPERTIES&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.table.name&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;{yourphoenixdb}.phoenix_table&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.zookeeper.quorum&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;{removed}.com,{removed}.com,{removed}.com&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.zookeeper.znode.parent&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;/hbase-secure&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.zookeeper.client.port&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;2181&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.rowkeys&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;s1, i1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.column.mapping&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;s1:s1, i1:i1, f1:f1, d1:d1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;&quot;phoenix.table.options&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&quot;SALT_BUCKETS=10, DATA_BLOCK_ENCODING='DIFF'&quot;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;Now I am getting a new error:&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-none&quot; data-lang=&quot;none&quot;&gt;Error: Error while processing statement: FAILED: Execution Error, return code 1 from org.apache.hadoop.hive.ql.exec.DDLTask. MetaException(message:org.apache.phoenix.exception.PhoenixIOException: org.apache.hadoop.hbase.security.AccessDeniedException: Insufficient permissions for user âhive/ln112133.eh.pweh.com@HDP-DEV.PW.UTC.COM',action: scannerOpen, tableName:SYSTEM:CATALOG, family:0, column: TYPE_NAME
-        at org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor.authorizeAccess(RangerAuthorizationCoprocessor.java:551)
-        at org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor.preScannerOpen(RangerAuthorizationCoprocessor.java:955)
-        at org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor.preScannerOpen(RangerAuthorizationCoprocessor.java:855)
-        at org.apache.hadoop.hbase.regionserver.RegionCoprocessorHost$50.call(RegionCoprocessorHost.java:1267)
-        at org.apache.hadoop.hbase.regionserver.RegionCoprocessorHost$RegionOperation.call(RegionCoprocessorHost.java:1660)
-        at org.apache.hadoop.hbase.regionserver.RegionCoprocessorHost.execOperation(RegionCoprocessorHost.java:1734)
-        at org.apache.hadoop.hbase.regionserver.RegionCoprocessorHost.execOperationWithResult(RegionCoprocessorHost.java:1709)
-        at org.apache.hadoop.hbase.regionserver.RegionCoprocessorHost.preScannerOpen(RegionCoprocessorHost.java:1262)
-        at org.apache.hadoop.hbase.regionserver.RSRpcServices.scan(RSRpcServices.java:2418)
-        at org.apache.hadoop.hbase.protobuf.generated.ClientProtos$ClientService$2.callBlockingMethod(ClientProtos.java:32385)
-        at org.apache.hadoop.hbase.ipc.RpcServer.call(RpcServer.java:2150)
-        at org.apache.hadoop.hbase.ipc.CallRunner.run(CallRunner.java:112)
-        at org.apache.hadoop.hbase.ipc.RpcExecutor$Handler.run(RpcExecutor.java:187)
-        at org.apache.hadoop.hbase.ipc.RpcExecutor$Handler.run(RpcExecutor.java:167)&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;This is easily confirmed in Ranger to be a permission issue, if you have it configured to log. 
-&lt;img src=&quot;https://i.imgur.com/8cQARc7.png&quot; alt=&quot;Ranger permissions&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;I will provide the proper permissions to HIVE and re-execute:
-&lt;img src=&quot;https://i.imgur.com/op2UyaT.png&quot; alt=&quot;Ranger Permissions&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/UxRKmHG.png&quot; alt=&quot;Ranger Permissions&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Also added the user access to the DB Tables for HBASE. I had attempted this with lowercase and yourphoenixdb:*, but it appears to get created all uppercase including the table name.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/vcyPucX.png&quot; alt=&quot;Ranger permissions&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/30zd86t.png&quot; alt=&quot;Ranger permissions&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Validate that our policy changes are pushed down, assuming you are using rangers audit.
-&lt;img src=&quot;https://i.imgur.com/vj3wNIJ.png&quot; alt=&quot;Policy pushed to ranger&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Now we have successful creation and a test select on the empty table. 
-&lt;img src=&quot;https://i.imgur.com/T1frsNM.png&quot; alt=&quot;Hive Select with Phoenix&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Testing an insert through hive 1.2, results of insert are slow because of the additional overhead.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/pJBhX5l.png&quot; alt=&quot;insert&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;We will connect with sql line and see if it is faster.&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;c&quot;&gt;#From a host with the phoenix query server installed&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /usr/hdp/current/phoenix-server/bin/
-./sqlline.py&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;It’s much faster&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;3 rows selected &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;0.029 seconds&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;The tests onn LLAP/ hive 2.x failed and the feature is not currently supported, I hope to get it working in the future and follow up.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Use Case:</summary></entry></feed>
+&lt;p&gt;After this we had successfully configured firefox for Kerberos.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Configuration:</summary></entry></feed>
