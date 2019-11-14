@@ -1,4 +1,42 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-11-08T17:20:46-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">Calling Kerberized RESTful API from Spark with Scala</title><link href="http://localhost:4000/spark/2019/11/08/Calling-Kerberized-RESTful-API-From-Spark-with-Scala.html" rel="alternate" type="text/html" title="Calling Kerberized RESTful API from Spark with Scala" /><published>2019-11-08T03:45:29-05:00</published><updated>2019-11-08T03:45:29-05:00</updated><id>http://localhost:4000/spark/2019/11/08/Calling-Kerberized-RESTful-API-From-Spark-with-Scala</id><content type="html" xml:base="http://localhost:4000/spark/2019/11/08/Calling-Kerberized-RESTful-API-From-Spark-with-Scala.html">&lt;h3 id=&quot;description&quot;&gt;Description:&lt;/h3&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-11-14T07:30:58-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">Network Tests</title><link href="http://localhost:4000/network/2019/11/14/Network-Tests.html" rel="alternate" type="text/html" title="Network Tests" /><published>2019-11-14T06:20:29-05:00</published><updated>2019-11-14T06:20:29-05:00</updated><id>http://localhost:4000/network/2019/11/14/Network-Tests</id><content type="html" xml:base="http://localhost:4000/network/2019/11/14/Network-Tests.html">&lt;h3 id=&quot;description&quot;&gt;Description:&lt;/h3&gt;
+&lt;p&gt;Every once in a while you will run into an issue and the support team is going to ask for a set of network tests. Due dilligence is required because network problems can compound very quickly. Here is a quick script you can run to create some logs for testing.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/bash&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;#cleanup any prior files&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;rm&lt;/span&gt; /tmp/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;_ifconfig.log
+&lt;span class=&quot;nb&quot;&gt;rm&lt;/span&gt; /tmp/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;.yourdomain.com.log
+
+&lt;span class=&quot;c&quot;&gt;# Declare an array of string with type&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;declare&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-a&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;StringArray&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;hst01.yourdomain.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;&quot;hst02.yourdomain.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;&quot;hst03.yourdomain.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;&quot;hst04.yourdomain.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;&quot;hst05.yourdomain.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;&quot;hst06.yourdomain.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;&quot;hst07.yourdomain.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;&quot;hst08.yourdomain.com&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 
+
+&lt;span class=&quot;c&quot;&gt;# Iterate the string array using for loop&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;val &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;StringArray&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[@]&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do
+   &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$val&lt;/span&gt;
+   ping &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; 3600 &lt;span class=&quot;nv&quot;&gt;$val&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; /tmp/from_&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;HOSTNAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;_to_&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;.log
+   dig &lt;span class=&quot;nv&quot;&gt;$val&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; /tmp/&lt;span class=&quot;nv&quot;&gt;$from_&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;HOSTNAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;_to_&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;.log
+&lt;span class=&quot;k&quot;&gt;done&lt;/span&gt;
+ 
+&lt;span class=&quot;c&quot;&gt;# Network interfaces&lt;/span&gt;
+ifconfig &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; /tmp/&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;HOSTNAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;_ifconfig.log&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Once you have completed execution of these scripts on every host, collect the logs into one location Search through the ping logs to see if you have times exceeding 1ms. Ping times generally should not exceed 1ms, especially if they are located on the same network or rack.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;time=[1-9]&quot;&lt;/span&gt; ./&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;time=[1-9][0-9]&quot;&lt;/span&gt; ./&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;You can also check the dig to see if the hosts have a single A record pointing to a single IP Address. You could use nslookup to execute forward and reverse lookups.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;;; ANSWER SECTION:&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-A&lt;/span&gt; 2 ./&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Description: Every once in a while you will run into an issue and the support team is going to ask for a set of network tests. Due dilligence is required because network problems can compound very quickly. Here is a quick script you can run to create some logs for testing.</summary></entry><entry><title type="html">Calling Kerberized RESTful API from Spark with Scala</title><link href="http://localhost:4000/spark/2019/11/08/Calling-Kerberized-RESTful-API-From-Spark-with-Scala.html" rel="alternate" type="text/html" title="Calling Kerberized RESTful API from Spark with Scala" /><published>2019-11-08T03:45:29-05:00</published><updated>2019-11-08T03:45:29-05:00</updated><id>http://localhost:4000/spark/2019/11/08/Calling-Kerberized-RESTful-API-From-Spark-with-Scala</id><content type="html" xml:base="http://localhost:4000/spark/2019/11/08/Calling-Kerberized-RESTful-API-From-Spark-with-Scala.html">&lt;h3 id=&quot;description&quot;&gt;Description:&lt;/h3&gt;
 &lt;p&gt;Recently I worked on a project where it was required to call restful API’s with a spark application. The endpoint that we needed to access was using Kerberos Authentication. To make this work properly I deployed a service keytab for the application ID that would be executing the process, in addition JAVA code was created to allow get and put operations to succeed with Kerberos. The after the jar was imported into the program kerberos calls worked perfeclty. This is probably not the cleanest implementation and it was completed in a pinch.&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Java Code:&lt;/strong&gt;&lt;/p&gt;
@@ -1158,113 +1196,4 @@ Modified Query:&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;3 rows selected &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;0.029 seconds&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;The tests onn LLAP/ hive 2.x failed and the feature is not currently supported, I hope to get it working in the future and follow up.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Use Case:</summary></entry><entry><title type="html">NiFi Keytab Credential Service and Ranger</title><link href="http://localhost:4000/nifi/security/2019/05/29/NiFi-Keytab-Credential-Service-and-Ranger.html" rel="alternate" type="text/html" title="NiFi Keytab Credential Service and Ranger" /><published>2019-05-29T08:27:29-04:00</published><updated>2019-05-29T08:27:29-04:00</updated><id>http://localhost:4000/nifi/security/2019/05/29/NiFi-Keytab-Credential-Service-and-Ranger</id><content type="html" xml:base="http://localhost:4000/nifi/security/2019/05/29/NiFi-Keytab-Credential-Service-and-Ranger.html">&lt;h3 id=&quot;about-the-keytab-credential-service&quot;&gt;About the keytab credential service:&lt;/h3&gt;
-
-&lt;p&gt;Provides a mechanism for specifying a Keytab and a Principal that other components are able to use in order to perform authentication using Kerberos. By encapsulating this information into a Controller Service and allowing other components to make use of it (as opposed to specifying the principal and keytab directly in the processor) an administrative is able to choose which users are allowed to use which keytabs and principals. This provides a more robust security model for multi-tenant use cases.&lt;/p&gt;
-
-&lt;h3 id=&quot;configure-the-service&quot;&gt;Configure the service&lt;/h3&gt;
-
-&lt;p&gt;Log into the NiFi UI and click on the &lt;strong&gt;Configuration&lt;/strong&gt; icon.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/Ai3ifTb.png&quot; alt=&quot;Configuration&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;This will open up a new panel for &lt;strong&gt;NiFi Flow Configuration&lt;/strong&gt; and click on &lt;strong&gt;CONTROLLER SERVICES&lt;/strong&gt;, this will display all the controller services defined at this level. &lt;strong&gt;NOTE:&lt;/strong&gt; this is currently being done at the root canvas &lt;strong&gt;Nifi Flow&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/F57hgLa.png&quot; alt=&quot;Controller Service&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;On the far right hand side there will be a + sign, click this to create a new controller service.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/6BpfFNs.png&quot; alt=&quot;New Controller Service&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;In the filter type the word keytab, then hit enter or click &lt;strong&gt;ADD&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/9oQCJuD.png&quot; alt=&quot;Filter&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;This has added the service, notice the caution icon as we have not yet configured this properly.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/Anx1xwk.png&quot; alt=&quot;Keytab Credential Service&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;On the far right hand side click on the &lt;strong&gt;Configure&lt;/strong&gt; icon.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/DRH0YCL.png&quot; alt=&quot;Properties&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Notice the name of the service, this is very generic and should be changed to be more specific. Otherwise it starts to become very difficult in NiFi to understand which controller services are for specific purposes.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/vn296cF.png&quot; alt=&quot;Keytab Credential Service&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Note the unique ID that has been created by NiFi, we will use this later.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/UFAzITW.png&quot; alt=&quot;ID&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Since we are configuring the generic hdpprd-ingest this will be named more appropriately.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/YnhgaBy.png&quot; alt=&quot;Controller Service&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Next click on &lt;strong&gt;PROPERTIES&lt;/strong&gt; to finish the configuration. 
-Enter in the path to the keytab file path and the Kerberos Principal. &lt;strong&gt;NOTE:&lt;/strong&gt; the keytab should be accessible to the user running NiFi, in this case you should &lt;strong&gt;chown nifi:hadoop /path/to/keytab&lt;/strong&gt; and the permissions should be &lt;strong&gt;chmod 600 /path/to/keytab&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/lwD4iB6.png&quot; alt=&quot;Credentials&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Click on OK to exit, the controller services is now configured.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/mHTFa4D.png&quot; alt=&quot;Created Service&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;security-configuration&quot;&gt;Security Configuration:&lt;/h3&gt;
-
-&lt;p&gt;Next we will configure a set of policies in Ranger to allow a test of the controller service. This next section assumes that the users already have access to the process group and will not cover these security details. 
-In the flow the processor &lt;strong&gt;FetchHBaseRow&lt;/strong&gt; requires a keytab, right click on it and click on configure.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/Rfcb6t9.png&quot; alt=&quot;FetchHbaseRow&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;For the &lt;strong&gt;HBase Client Service&lt;/strong&gt; we currently have no value set.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/cyKfTm1.png&quot; alt=&quot;HbaseClientService&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;When clicking on the dropdown of available services, we can see that no service access has been granted.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/5Ml07E5.png&quot; alt=&quot;No Service Available&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The &lt;strong&gt;HBase Client Service&lt;/strong&gt; will use the keytab, in this case we will create a new service. &lt;strong&gt;NOTE:&lt;/strong&gt; This will create a service in the scope of the process group level.
-I am renaming my service&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;FROM:&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/2QXymjr.png&quot; alt=&quot;From&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;TO:&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/U7xcxDY.png&quot; alt=&quot;To&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Next click on the arrow to configure, when asked to save changes click yes.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/RpA8kP5.png&quot; alt=&quot;Configure&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;This takes you to the services window, click on the configure icon to edit your controller service and notice the Kerberos Credentials Service is not configured.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/ZsuTIi7.png&quot; alt=&quot;No Value Set&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Clicking on the drop down displays the fact that a service is configured but not available to my user. NOTE: the id number matches the one previously mentioned in this article.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/gyP2hCf.png&quot; alt=&quot;Not Available&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;In Ranger we will add the following entry to the policy we are configuring for this group. 
-&lt;strong&gt;Format Mask&lt;/strong&gt; = /controller-services/{controller unique identifier}
-&lt;strong&gt;Value&lt;/strong&gt; = /controller-services/612a6a17-0168-XXXX-XXXX-XXXXXXX506a0&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/v4Itj1D.png&quot; alt=&quot;Ranger&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Once the policies have refreshed we now have access to the service. Pleas select the service.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/ggnEW8A.png&quot; alt=&quot;Configured&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Configure the rest of the parameters required, in this case for HBase it is the location to the core-site.xml, hdfs-site.xml and hbase-site.xml.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/L6sUwDT.png&quot; alt=&quot;Final Configurations&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Enable the service and test the processor, and we have success.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/1eFE38T.png&quot; alt=&quot;Success&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;other-considerations&quot;&gt;Other Considerations&lt;/h3&gt;
-
-&lt;p&gt;If you provide access to a user for the keytab credential service with read/write, they do have full access to the service. This means they can view and change the configuration. If you intend to use this globally as a one-time setup and provide this to process group users it would require you to add this to a policy with read only. There is always still an option for an administrator to set these up at the process group level, however this could also become difficult to manage. Many times groups can just configure these settings within their own process group putting control in the hands of the developers.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">About the keytab credential service:</summary></entry></feed>
+&lt;p&gt;The tests onn LLAP/ hive 2.x failed and the feature is not currently supported, I hope to get it working in the future and follow up.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Use Case:</summary></entry></feed>
