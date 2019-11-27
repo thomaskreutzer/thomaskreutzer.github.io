@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-11-14T08:34:18-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">Spark Hive Warehouse Connector with Analytical Queries</title><link href="http://localhost:4000/spark/2019/11/14/Spark-Hive-Warehouse-Connector-with-Analytical-Queries.html" rel="alternate" type="text/html" title="Spark Hive Warehouse Connector with Analytical Queries" /><published>2019-11-14T07:27:29-05:00</published><updated>2019-11-14T07:27:29-05:00</updated><id>http://localhost:4000/spark/2019/11/14/Spark-Hive-Warehouse-Connector-with-Analytical-Queries</id><content type="html" xml:base="http://localhost:4000/spark/2019/11/14/Spark-Hive-Warehouse-Connector-with-Analytical-Queries.html">&lt;h3 id=&quot;issue&quot;&gt;Issue:&lt;/h3&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-11-27T15:19:36-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Thomas Kreutzer’s Git Pages Blog</title><subtitle>I am generally a busy person so should I spend time to write this tech blog? I think the answer is yes, it's good to have these items as a reference when I forget what I did a year from now on a project that one time. It's good to share with all you fine people as well. Hopefully I will make more time for these posts in the future. </subtitle><entry><title type="html">Spark Hive Warehouse Connector with Analytical Queries</title><link href="http://localhost:4000/spark/2019/11/14/Spark-Hive-Warehouse-Connector-with-Analytical-Queries.html" rel="alternate" type="text/html" title="Spark Hive Warehouse Connector with Analytical Queries" /><published>2019-11-14T07:27:29-05:00</published><updated>2019-11-14T07:27:29-05:00</updated><id>http://localhost:4000/spark/2019/11/14/Spark-Hive-Warehouse-Connector-with-Analytical-Queries</id><content type="html" xml:base="http://localhost:4000/spark/2019/11/14/Spark-Hive-Warehouse-Connector-with-Analytical-Queries.html">&lt;h3 id=&quot;issue&quot;&gt;Issue:&lt;/h3&gt;
 &lt;p&gt;The hive warehouse connector is very useful to provide Spark with access to hive transactional ACID tables. However, in the current version I was using it did not work with analytical queries unless a specific parameter was added.&lt;/p&gt;
 
 &lt;h3 id=&quot;resolution&quot;&gt;Resolution:&lt;/h3&gt;
@@ -1089,28 +1089,16 @@ ERROR 2018-05-22 08:17:52.585 dw-61 - GET /favicon.ico c.h.r.c.GenericExceptionM
 javax.ws.rs.NotFoundException: HTTP 404 Not Found&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;h3 id=&quot;solution&quot;&gt;SOLUTION:&lt;/h3&gt;
-&lt;p&gt;After updating it to 32KiB, I am able to get past the error.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Assumptions:</summary></entry><entry><title type="html">Kerberos and Firefox</title><link href="http://localhost:4000/security/2019/06/09/Kerberos-and-firefox.html" rel="alternate" type="text/html" title="Kerberos and Firefox" /><published>2019-06-09T07:27:29-04:00</published><updated>2019-06-09T07:27:29-04:00</updated><id>http://localhost:4000/security/2019/06/09/Kerberos-and-firefox</id><content type="html" xml:base="http://localhost:4000/security/2019/06/09/Kerberos-and-firefox.html">&lt;h3 id=&quot;configuration&quot;&gt;Configuration:&lt;/h3&gt;
+&lt;p&gt;After updating it to 32KiB, I am able to get past the error.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Assumptions:</summary></entry><entry><title type="html">Remove a header from Nfi fast</title><link href="http://localhost:4000/nifi/2019/06/09/Remove-a-header-from-Nifi-fast.html" rel="alternate" type="text/html" title="Remove a header from Nfi fast" /><published>2019-06-09T08:27:29-04:00</published><updated>2019-06-09T08:27:29-04:00</updated><id>http://localhost:4000/nifi/2019/06/09/Remove-a-header-from-Nifi-fast</id><content type="html" xml:base="http://localhost:4000/nifi/2019/06/09/Remove-a-header-from-Nifi-fast.html">&lt;h3 id=&quot;efficient-header-removal-from-a-file-in-nifi&quot;&gt;Efficient header removal from a file in Nifi:&lt;/h3&gt;
 
-&lt;p&gt;Install the MIT Kerberos tools for windows and get a proper ticket. &lt;a href=&quot;http://web.mit.edu/kerberos/dist/&quot;&gt;MIT Kereberos&lt;/a&gt;
-In the firefox URL type about:config&lt;/p&gt;
+&lt;p&gt;This one is fairly simple, use sed and the ExecuteStreamCommand processor.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/y2e7htw.png&quot; alt=&quot;about:config&quot; /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;configuration&quot;&gt;Configuration&lt;/h2&gt;
 
-&lt;p&gt;Click on accept the risk that you might void your warranty.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/c2ffs7Z.png&quot; alt=&quot;Warranty&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Search on &lt;strong&gt;negotiate-auth&lt;/strong&gt;
-Under &lt;strong&gt;network.negotiate-auth.delegation-uris&lt;/strong&gt; and &lt;strong&gt;network.negotiate-auth.trusted-uris&lt;/strong&gt; we added &lt;strong&gt;yourdomain.com ,.yourdomain.com&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/3iFLrIk.png&quot; alt=&quot;about:config&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Search on &lt;strong&gt;network.auth.use-sspi&lt;/strong&gt; and set it to &lt;strong&gt;false&lt;/strong&gt;:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/S23LpvW.png&quot; alt=&quot;about:config&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Search on &lt;strong&gt;network.negotiate-auth.gsslib&lt;/strong&gt; and set it to the value for the MIT Kerberos you installed, in our case it was 64 bit with Firefox 64 bit so we set it to &lt;strong&gt;C:\Program Files\MIT\Kerberos\bin\gssapi64.dll&lt;/strong&gt;:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/yN1qKZM.png&quot; alt=&quot;about:config&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;After this we had successfully configured firefox for Kerberos.&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Configuration:</summary></entry></feed>
+&lt;p&gt;Command Arguments: 1d
+Command Path: sed
+Ignore STDIN: false
+Working Directory: No value set
+Argument Delimiter: ;
+Output Destination Attribute: No value set
+Max Attribute Length: 256&lt;/p&gt;</content><author><name>Thomas Kreutzer</name></author><summary type="html">Efficient header removal from a file in Nifi:</summary></entry></feed>
